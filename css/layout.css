@@ -196,7 +196,8 @@
 }
 
 .map-brand__logo{
-  height:1.5rem;width:auto;display:block;flex-shrink:0;
+  /* Wordmark apilado (SAiMON / NEXUS): un poco más alto para legibilidad. */
+  height:2rem;width:auto;display:block;flex-shrink:0;
 }
 
 .map-brand__meta{
