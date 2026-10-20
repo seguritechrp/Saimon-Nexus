@@ -58,7 +58,7 @@ const mapRoot = document.getElementById("map");
 
 const map = new maplibregl.Map({
   container: "map-canvas",
-  style: STYLES.dark,
+  style: STYLES[mapStyle],
   center: CENTER,
   zoom: 15.4,
   pitch: 60,
@@ -137,24 +137,27 @@ function applyNexusLayers(styleId){
 map.on("load", () => applyNexusLayers(mapStyle));
 
 /* ============================================================
-   ESTILO DEL MAPA — oscuro ↔ día
+   TEMA GLOBAL (topnav) ↔ estilo del mapa día/noche
+   El control vive en #theme-toggle (header). Aquí solo
+   sincronizamos OpenFreeMap + chrome de UI.
    ============================================================ */
 (function mapStyleToggle(){
-  const toggle = document.getElementById("map-style-toggle");
+  const toggle = document.getElementById("theme-toggle");
   if(!toggle) return;
-
-  const label = toggle.querySelector(".mapview__label");
-  const iconDay = toggle.querySelector(".mapview__icon--day");
-  const iconNight = toggle.querySelector(".mapview__icon--night");
 
   const syncChrome = () => {
     const day = mapStyle === "day";
+    const theme = day ? "light" : "dark";
+    /* aria-pressed = modo claro activo → sol iluminado; false → luna */
     toggle.setAttribute("aria-pressed", String(day));
-    toggle.setAttribute("aria-label", day ? "Cambiar a vista noche" : "Cambiar a vista día");
-    if(label) label.textContent = day ? "Vista noche" : "Vista día";
-    if(iconDay) iconDay.hidden = day;
-    if(iconNight) iconNight.hidden = !day;
+    toggle.setAttribute("aria-label", day ? "Cambiar a modo oscuro" : "Cambiar a modo claro");
     if(mapRoot) mapRoot.dataset.mapStyle = mapStyle;
+    document.documentElement.dataset.theme = theme;
+    const logo = document.getElementById("topnav-logo");
+    if(logo){
+      const next = day ? logo.dataset.logoLight : logo.dataset.logoDark;
+      if(next && logo.getAttribute("src") !== next) logo.src = next;
+    }
   };
 
   syncChrome();
@@ -173,13 +176,20 @@ map.on("load", () => applyNexusLayers(mapStyle));
       if(done) return;
       done = true;
       try{
-        applyNexusLayers(mapStyle);
-        map.setPadding(mapPadding(), { duration: 0 });
+        if(map && typeof map.getStyle === "function"){
+          applyNexusLayers(mapStyle);
+          map.setPadding(mapPadding(), { duration: 0 });
+        }
       }catch(err){
         console.error("[mapa] no se pudo reaplicar capas:", err);
       }
       toggle.disabled = false;
     };
+
+    if(!map || typeof map.setStyle !== "function"){
+      finish();
+      return;
+    }
 
     map.once("style.load", finish);
     map.setStyle(STYLES[mapStyle]);

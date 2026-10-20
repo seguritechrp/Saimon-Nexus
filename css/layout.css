@@ -8,11 +8,196 @@
    SHELL
    ============================================================ */
 .shell{
-  /* El mapa llena el viewport. Las columnas flotan encima. */
+  /* Topnav fija + escenario (mapa / módulos) debajo. */
   display:grid;height:100vh;min-width:81.25rem;position:relative;
   grid-template-columns:minmax(0,1fr);
-  grid-template-rows:minmax(0,1fr);
-  grid-template-areas:"map";
+  grid-template-rows:var(--nx-topnav-h) minmax(0,1fr);
+  grid-template-areas:"topnav" "stage";
+}
+
+.shell__stage{
+  grid-area:stage;position:relative;min-height:0;overflow:hidden;
+}
+
+/* ---------- Barra de módulos ---------- */
+.topnav{
+  grid-area:topnav;z-index:var(--nx-z-topnav);
+  display:flex;align-items:center;gap:var(--spacing-lg);
+  padding:0 var(--spacing-md);
+  background:var(--bg-header-top);
+  border-bottom:1px solid var(--border-color);
+  color:var(--text-primary);
+}
+
+.topnav__brand{
+  display:flex;align-items:center;flex-shrink:0;
+  text-decoration:none;color:inherit;
+  border-radius:var(--border-radius-sm);
+}
+
+.topnav__logo{
+  height:1.8rem;width:auto;display:block;
+}
+
+/* Wordmark blanco sobre barra oscura: el PNG trae fondo negro. */
+html[data-theme="dark"] .topnav__logo{mix-blend-mode:lighten}
+
+.topnav__nav{
+  display:flex;align-items:center;gap:.125rem;
+  min-width:0;flex:1;
+}
+
+.topnav__link{
+  position:relative;padding:.375rem .75rem;
+  background:none;border:0;border-radius:var(--border-radius-sm);
+  color:var(--text-muted);font-size:var(--nx-text-sm);
+  font-weight:var(--font-weight-medium);cursor:pointer;
+  transition:color var(--duration-fast) var(--ease-standard),
+             background-color var(--duration-fast) var(--ease-standard);
+}
+
+.topnav__link:hover{color:var(--text-secondary);background:var(--nx-hover-strong)}
+
+.topnav__link.is-active{
+  color:var(--text-primary);
+}
+
+.topnav__link.is-active::after{
+  content:"";position:absolute;left:.75rem;right:.75rem;bottom:-.125rem;
+  height:2px;border-radius:1px;background:var(--accent-blue);
+}
+
+.topnav__end{
+  display:flex;align-items:center;gap:var(--spacing-md);
+  margin-left:auto;flex-shrink:0;
+}
+
+.topnav__context{
+  display:flex;align-items:center;gap:var(--spacing-sm);
+  padding-right:var(--spacing-sm);
+  border-right:1px solid var(--nx-border-soft);
+}
+
+/* Switch tema: sol iluminado en claro, luna iluminada en oscuro */
+.topnav__theme{
+  display:inline-flex;align-items:center;padding:0;margin-right:.125rem;
+  background:none;border:0;cursor:pointer;border-radius:var(--radius-pill);
+}
+
+.topnav__theme:focus-visible{outline:none}
+.topnav__theme:focus-visible .topnav__theme-track{box-shadow:var(--focus-ring)}
+
+.topnav__theme-track{
+  position:relative;display:grid;grid-template-columns:1fr 1fr;align-items:center;
+  width:3.75rem;height:1.75rem;padding:.15rem;
+  background:var(--nx-fill-faint);border:1px solid var(--nx-border-soft);
+  border-radius:var(--radius-pill);
+  transition:background-color var(--duration-normal) var(--ease-standard),
+    border-color var(--duration-normal) var(--ease-standard);
+}
+
+.topnav__theme:hover .topnav__theme-track{border-color:var(--border-color-light)}
+
+.topnav__theme-icon{
+  position:relative;z-index:1;width:.95rem;height:.95rem;justify-self:center;
+  color:var(--text-muted);opacity:.45;
+  transition:color var(--duration-normal) var(--ease-standard),
+    opacity var(--duration-normal) var(--ease-standard);
+}
+
+.topnav__theme-knob{
+  position:absolute;top:.15rem;left:.15rem;z-index:0;
+  width:calc(50% - .15rem);height:calc(100% - .3rem);
+  border-radius:var(--radius-pill);background:var(--bg-panel);
+  box-shadow:var(--shadow-sm);
+  transition:transform var(--duration-normal) var(--ease-standard),
+    background-color var(--duration-normal) var(--ease-standard);
+}
+
+/* Claro activo: knob a la izquierda, sol iluminado */
+.topnav__theme[aria-pressed="true"] .topnav__theme-icon--sun{
+  color:var(--accent-orange);opacity:1;
+}
+.topnav__theme[aria-pressed="true"] .topnav__theme-knob{
+  transform:translateX(0);
+}
+
+/* Oscuro activo: knob a la derecha, luna iluminada */
+.topnav__theme[aria-pressed="false"] .topnav__theme-icon--moon{
+  color:var(--nx-tint-blue);opacity:1;
+}
+.topnav__theme[aria-pressed="false"] .topnav__theme-knob{
+  transform:translateX(100%);
+  background:var(--nx-surface-sunken);
+}
+
+.topnav__context-item{
+  display:inline-flex;align-items:center;gap:.3125rem;
+  font-size:var(--nx-text-xs);color:var(--text-secondary);white-space:nowrap;
+}
+
+.topnav__context-item svg{
+  width:.875rem;height:.875rem;flex-shrink:0;color:var(--text-muted);
+}
+
+.topnav__user{
+  display:inline-flex;align-items:center;gap:var(--spacing-sm);
+  padding:.25rem .25rem .25rem .625rem;
+  background:none;border:0;border-radius:var(--border-radius-sm);
+  color:inherit;cursor:pointer;
+  transition:background-color var(--duration-fast) var(--ease-standard);
+}
+
+.topnav__user:hover{background:var(--nx-hover-strong)}
+
+.topnav__user-text{
+  display:grid;justify-items:end;gap:.0625rem;line-height:var(--line-height-tight);
+}
+
+.topnav__user-name{
+  font-size:var(--nx-text-xs);font-weight:var(--font-weight-medium);color:var(--text-primary);
+}
+
+.topnav__user-role{
+  font-size:var(--nx-text-2xs);color:var(--text-muted);
+}
+
+/* Paneles placeholder de módulos fuera de Operación */
+.module-pane{
+  position:absolute;inset:0;z-index:calc(var(--nx-z-panel) + 5);
+  display:grid;place-items:center;
+  padding:var(--spacing-xl);
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(var(--accent-blue-rgb),.12), transparent 55%),
+    var(--bg-main);
+}
+
+.module-pane[hidden]{display:none !important}
+
+/* Monitoreo: stage a pantalla completa (sin centrado de placeholder) */
+.module-pane--monitor{
+  padding:0;place-items:stretch;background:var(--nx-surface-map);
+}
+
+.module-pane__card{
+  max-width:36rem;text-align:center;
+}
+
+.module-pane__eyebrow{
+  margin:0 0 var(--spacing-sm);
+  font-size:var(--nx-text-xs);font-weight:var(--font-weight-medium);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);
+}
+
+.module-pane__title{
+  margin:0 0 var(--spacing-sm);
+  font-size:var(--nx-text-2xl);font-weight:var(--font-weight-semibold);
+  letter-spacing:-.02em;color:var(--text-primary);
+}
+
+.module-pane__lead{
+  margin:0;font-size:var(--nx-text-md);line-height:var(--line-height-snug);
+  color:var(--text-secondary);
 }
 
 /* ---------- Avatar / meta reutilizados en el HUD del mapa ---------- */
@@ -49,11 +234,13 @@
 }
 
 .left{
-  top:calc(var(--nx-panel-gap) + var(--nx-brand-slot) + var(--spacing-sm));
+  top:var(--nx-panel-gap);
   left:var(--nx-panel-gap);width:var(--nx-col-left);overflow:hidden;
   display:flex;
-  background:var(--nx-surface-raised);border:1px solid var(--border-color);
+  background:var(--nx-glass);border:1px solid var(--border-color);
   border-radius:var(--border-radius-lg);box-shadow:var(--shadow-lg);
+  backdrop-filter:blur(var(--nx-glass-blur));
+  -webkit-backdrop-filter:blur(var(--nx-glass-blur));
 }
 
 .ai{
@@ -68,11 +255,11 @@
   display:none;
 }
 
-.shell.is-head-min .left{
-  top:calc(var(--nx-panel-gap) + var(--nx-brand-slot) + var(--spacing-sm));
+/* Fuera de Operación: sacar del layout el HUD operativo (mapa + paneles).
+   visibility no basta: el canvas WebGL del mapa sigue pintándose encima. */
+.shell:not([data-module="operacion"]) [data-ops-ui]{
+  display:none !important;
 }
-
-.shell.is-head-min .ai{top:var(--nx-panel-gap)}
 
 /* ============================================================
    COLUMNA IZQUIERDA — contexto cuantitativo
@@ -177,7 +364,10 @@
 /* ============================================================
    CENTRO — mapa táctico
    ============================================================ */
-.map{grid-area:map;position:relative;background:var(--nx-surface-map);overflow:hidden;min-width:0}
+.map{
+  position:absolute;inset:0;background:var(--nx-surface-map);
+  overflow:hidden;min-width:0;
+}
 
 /* Contenedor de MapLibre. Conserva el nombre que tenía el lienzo SVG
    porque el encuadre dentro de <main class="map"> no cambió. */
@@ -190,9 +380,11 @@
   display:flex;align-items:center;gap:var(--spacing-md);
   width:var(--nx-col-left);box-sizing:border-box;
   padding:.4375rem .75rem .4375rem .875rem;
-  background:var(--nx-surface-raised);border:1px solid var(--border-color);
+  background:var(--nx-glass);border:1px solid var(--border-color);
   border-radius:var(--border-radius-lg);box-shadow:var(--shadow-lg);
-  color:var(--text-primary);backdrop-filter:blur(.5rem);
+  color:var(--text-primary);
+  backdrop-filter:blur(var(--nx-glass-blur));
+  -webkit-backdrop-filter:blur(var(--nx-glass-blur));
 }
 
 .map-brand__logo{
@@ -235,16 +427,18 @@
 /* La atribución de OpenFreeMap es obligatoria y no se oculta; se corre
    a la izquierda del muelle (card + controles) para no quedar debajo. */
 .maplibregl-ctrl-bottom-right{
-  right:calc(var(--nx-panel-gap) + var(--nx-col-right) + var(--nx-panel-gap) + 24.5rem);
+  right:calc(var(--nx-panel-gap) + var(--nx-col-right) + var(--nx-panel-gap) + 50rem);
 }
 
 .shell:not(.is-right-open) .maplibregl-ctrl-bottom-right{
-  right:calc(var(--nx-panel-gap) + 24.5rem);
+  right:calc(var(--nx-panel-gap) + 50rem);
 }
 
-/* Muelle inferior derecho: card de robot + columna de controles */
+/* Muelle inferior derecho: card de robot + columna de controles.
+   Por encima de paneles flotantes: si no, la ficha ancha queda tapada
+   por la columna derecha y parece que «no abre». */
 .map-dock{
-  position:absolute;bottom:var(--spacing-md);z-index:var(--z-base);
+  position:absolute;bottom:var(--spacing-md);z-index:calc(var(--nx-z-panel) + 2);
   display:flex;align-items:flex-end;gap:var(--spacing-sm);
   pointer-events:none;
 }
@@ -259,7 +453,9 @@
 
 .mapctl button{
   width:2.25rem;height:2.25rem;display:grid;place-items:center;cursor:pointer;
-  background:var(--nx-glass);backdrop-filter:blur(.5rem);
+  background:var(--nx-glass);
+  backdrop-filter:blur(var(--nx-glass-blur));
+  -webkit-backdrop-filter:blur(var(--nx-glass-blur));
   border:1px solid var(--border-color);border-radius:var(--border-radius-sm);
   color:var(--text-secondary);font-size:var(--nx-text-xs);font-weight:var(--font-weight-medium);
   transition:color var(--duration-fast) var(--ease-standard),border-color var(--duration-fast) var(--ease-standard);
@@ -284,7 +480,9 @@
 .mapview{
   position:absolute;bottom:var(--spacing-md);
   display:inline-flex;align-items:center;gap:var(--spacing-sm);
-  padding:.5rem .875rem;background:var(--nx-glass);backdrop-filter:blur(.5rem);
+  padding:.5rem .875rem;background:var(--nx-glass);
+  backdrop-filter:blur(var(--nx-glass-blur));
+  -webkit-backdrop-filter:blur(var(--nx-glass-blur));
   border:1px solid var(--border-color);border-radius:var(--border-radius-sm);
   color:var(--text-secondary);font-size:var(--nx-text-sm);cursor:pointer;
   transition:color var(--duration-fast) var(--ease-standard),
@@ -358,7 +556,9 @@
   font-size:var(--nx-text-2xs);font-weight:var(--font-weight-medium);
   letter-spacing:.04em;color:var(--text-secondary);
   background:var(--nx-glass);border:1px solid var(--border-color);
-  border-radius:var(--radius-pill);backdrop-filter:blur(.5rem);
+  border-radius:var(--radius-pill);
+  backdrop-filter:blur(var(--nx-glass-blur));
+  -webkit-backdrop-filter:blur(var(--nx-glass-blur));
 }
 
 .agent-orb__pip{
@@ -391,7 +591,7 @@
   --bulge:calc((1.5 - abs(1.5 - var(--i,0))) * .6rem);
   position:relative;margin-right:var(--bulge);
   padding:.4rem .9rem;border:0;border-radius:var(--radius-pill);
-  background:var(--btn-gradient);color:#fff;
+  background:var(--btn-gradient);color:var(--text-on-accent);
   font:inherit;font-size:var(--nx-text-xs);font-weight:var(--font-weight-medium);
   letter-spacing:.01em;white-space:nowrap;cursor:pointer;
   box-shadow:0 .25rem .75rem rgba(var(--accent-blue-rgb),.35);
@@ -439,9 +639,7 @@
   50%{opacity:1;transform:scaleX(1.08)}
 }
 
-/* En mapa día el vidrio semitransparente se lava contra el Bright:
-   HUD y marcadores pasan a superficie opaca de sala. El tema oscuro
-   no se toca. */
+/* En mapa día el foco corta contra blanco; el HUD mantiene vidrio. */
 #map[data-map-style="day"]{
   --nx-focus-ring-map:0 0 0 2px #fff,0 0 0 4px rgba(var(--accent-blue-rgb),.85);
 }
@@ -452,7 +650,9 @@
 #map[data-map-style="day"] .mapctl button,
 #map[data-map-style="day"] .compass,
 #map[data-map-style="day"] .agent-orb__label{
-  background:var(--bg-panel);backdrop-filter:none;
+  background:var(--nx-glass);
+  backdrop-filter:blur(var(--nx-glass-blur));
+  -webkit-backdrop-filter:blur(var(--nx-glass-blur));
   color:var(--text-primary);border-color:var(--border-color);
   box-shadow:var(--shadow-md);
 }
@@ -476,7 +676,8 @@
 }
 
 #map[data-map-style="day"] .layer[aria-pressed="true"]{
-  color:var(--text-primary);background:var(--accent-dark-blue);
+  color:var(--text-primary);
+  background:rgba(var(--accent-blue-rgb),.14);
   border-color:var(--accent-blue);
 }
 
@@ -492,12 +693,13 @@
 #map[data-map-style="day"] .mapctl button:hover:not(:disabled),
 #map[data-map-style="day"] .compass:hover:not(:disabled){
   color:var(--text-primary);border-color:var(--border-color-light);
-  background:var(--nx-surface-raised);
+  background:var(--nx-glass);
 }
 
 #map[data-map-style="day"] .mapview[aria-pressed="true"],
 #map[data-map-style="day"] .mapctl button[aria-pressed="true"]:not(:disabled){
-  color:var(--text-primary);background:var(--accent-dark-blue);
+  color:var(--text-primary);
+  background:rgba(var(--accent-blue-rgb),.14);
   border-color:var(--accent-blue);
 }
 
@@ -509,17 +711,17 @@
 /* Incidente: relleno sólido por prioridad (alta / media / baja). */
 #map[data-map-style="day"] .marker--incidente,
 #map[data-map-style="day"] .marker--incidente.marker--prio-high{
-  background:var(--accent-red);color:var(--text-primary);
+  background:var(--accent-red);color:var(--text-on-accent);
   box-shadow:0 0 0 2px var(--nx-surface-map),0 0 1.25rem rgba(var(--accent-red-rgb),.55);
 }
 
 #map[data-map-style="day"] .marker--incidente.marker--prio-medium{
-  background:var(--accent-orange);color:var(--text-primary);
+  background:var(--accent-orange);color:var(--text-on-accent);
   box-shadow:0 0 0 2px var(--nx-surface-map),0 0 1.25rem rgba(var(--accent-orange-rgb),.55);
 }
 
 #map[data-map-style="day"] .marker--incidente.marker--prio-low{
-  background:var(--accent-green);color:var(--text-primary);
+  background:var(--accent-green);color:var(--text-on-accent);
   box-shadow:0 0 0 2px var(--nx-surface-map),0 0 1.25rem rgba(var(--accent-green-rgb),.55);
 }
 
@@ -555,8 +757,10 @@
 
 .ai-card{
   display:flex;flex-direction:column;min-height:0;overflow:hidden;
-  background:var(--nx-surface-raised);border:1px solid var(--border-color);
+  background:var(--nx-glass);border:1px solid var(--border-color);
   border-radius:var(--border-radius-lg);box-shadow:var(--shadow-lg);
+  backdrop-filter:blur(var(--nx-glass-blur));
+  -webkit-backdrop-filter:blur(var(--nx-glass-blur));
 }
 
 .ai-card[hidden]{display:none !important}
@@ -610,7 +814,8 @@
 .ai-card__head{
   display:flex;align-items:center;gap:var(--spacing-sm);
   padding:.5rem var(--spacing-md);border-bottom:1px solid var(--nx-border-soft);
-  flex:0 0 auto;background:var(--nx-surface-raised-solid);
+  flex:0 0 auto;
+  background:color-mix(in srgb,var(--nx-surface-raised-solid) 90%,transparent);
 }
 
 .ai-card__title{

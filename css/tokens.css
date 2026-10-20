@@ -20,8 +20,8 @@
 
   /* — Superficies nuevas de Nexus — */
   --nx-surface-map:#0C1729;      /* lienzo del mapa, más profundo que bg-main */
-  --nx-surface-raised-solid:#0f1c33; /* cabecera opaca de panel flotante */
-  --nx-surface-raised:color-mix(in srgb,var(--nx-surface-raised-solid) 94%,transparent);
+  --nx-surface-raised-solid:#0f1c33; /* base de panel flotante (antes de mezclar) */
+  --nx-surface-raised:color-mix(in srgb,var(--nx-surface-raised-solid) 90%,transparent);
   --nx-surface-sunken:#101C33;   /* filas de lista, pozos */
 
   /* — Texto (CAD Lite) — */
@@ -29,6 +29,7 @@
   --text-secondary:#9ba0ab;
   --text-muted:#6b7280;
   --text-placeholder:#7F92BE;
+  --text-on-accent:#ffffff; /* sobre botones / acentos sólidos */
 
   /* — Acentos (CAD Lite) — */
   --accent-blue:#2d68f8;      --accent-blue-rgb:45,104,248;
@@ -58,9 +59,17 @@
   --nx-border-soft:rgba(255,255,255,.07);
   --nx-border-neutral:#8b93a7;   /* marcador / arco sin acento fuerte */
 
-  /* — Superposiciones sobre el mapa — */
-  --nx-glass:rgba(21,36,62,.88);      /* control flotante */
-  --nx-glass-soft:rgba(21,36,62,.82); /* píldora de capa */
+  /* — Superposiciones sobre el mapa (vidrio ~72–78% + degradado) —
+     Azules de sala (#0f1c33 → #15243E → #233a63). Más transparente
+     para que el mapa y el degradado se lean mejor. — */
+  --nx-glass:linear-gradient(160deg,
+    rgba(15,28,51,.78) 0%,
+    rgba(21,36,62,.74) 48%,
+    rgba(35,58,99,.70) 100%);
+  --nx-glass-soft:linear-gradient(160deg,
+    rgba(15,28,51,.72) 0%,
+    rgba(27,46,80,.68) 100%);
+  --nx-glass-blur:.875rem;            /* un poco más de blur al bajar opacidad */
   --nx-marker-bg:rgba(12,23,41,.92);
   --nx-unit-bg:rgba(12,23,41,.6);
 
@@ -124,15 +133,91 @@
 
   /* — Malla del shell — */
   --nx-header-h:4rem;
-  --nx-header-h-min:2rem;  /* plegado: marca, reloj y estado del sistema */
+  --nx-header-h-min:2rem;  /* legado: encabezado plegado */
+  --nx-topnav-h:3rem;     /* barra de módulos (logo + nav + usuario) */
   --nx-col-left:23rem;    /* 368px */
   --nx-col-right:26rem;   /* 416px */
   /* Aire alrededor de los paneles flotantes. Valor literal (no
      var(--spacing-md)): js/map.js lo lee con getPropertyValue y
      MapLibre pide px. Si cambia, mantener alineado con --spacing-md. */
   --nx-panel-gap:.75rem;
-  --nx-brand-slot:2.75rem; /* alto reservado para .map-brand arriba-izquierda */
+  --nx-brand-slot:0rem;   /* logo pasó a .topnav; ya no reserva slot en mapa */
   --nx-z-panel:20;        /* por encima del mapa; por debajo del encabezado */
+  --nx-z-topnav:30;       /* barra de módulos sobre paneles flotantes */
+
+  /* — Pista de donut (contraste sobre panel) — */
+  --nx-donut-track:rgba(255,255,255,.08);
+}
+
+/* ============================================================
+   TEMA CLARO — html[data-theme="light"]
+   Acoplado a vista día del mapa. Referencia: paneles blancos
+   flotantes, texto carbón, acento azul, sombras suaves.
+   ============================================================ */
+html[data-theme="light"]{
+  --bg-main:#E8EEF5;
+  --bg-panel:#FFFFFF;
+  --bg-panel-light:#F3F6FA;
+  --bg-input:#F3F6FA;
+  --bg-header:#FFFFFF;
+  --bg-header-top:#FFFFFF;
+  --bg-panel-gradient:linear-gradient(145deg,#FFFFFF 0%,#E8EEF5 100%);
+  --overlay-scrim:rgba(15,23,42,.35);
+
+  --nx-surface-map:#E8EEF5;
+  --nx-surface-raised-solid:#FFFFFF;
+  --nx-surface-raised:color-mix(in srgb,#FFFFFF 90%,transparent);
+  --nx-surface-sunken:#F1F5F9;
+
+  --text-primary:#0F172A;
+  --text-secondary:#475569;
+  --text-muted:#64748B;
+  --text-placeholder:#94A3B8;
+  --text-on-accent:#ffffff;
+
+  --accent-dark-blue:#DBEAFE;
+
+  --nx-tint-blue:#1D4ED8;
+  --nx-tint-blue-bright:#1E40AF;
+  --nx-tint-green:#047857;
+  --nx-tint-cyan:#0E7490;
+  --nx-tint-purple:#7E22CE;
+  --nx-tint-orange:#B45309;
+  --nx-tint-red:#B91C1C;
+  --nx-tint-neutral:#475569;
+
+  --border-color:#D0D7E2;
+  --border-color-light:#B8C2D1;
+  --border-input:rgba(15,23,42,.12);
+  --nx-border-soft:rgba(15,23,42,.08);
+  --nx-border-neutral:#64748B;
+
+  /* Vidrio light: blanco → panel-light → tinte azul (#DBEAFE), ~72–78% */
+  --nx-glass:linear-gradient(160deg,
+    rgba(255,255,255,.78) 0%,
+    rgba(243,246,250,.74) 52%,
+    rgba(219,234,254,.70) 100%);
+  --nx-glass-soft:linear-gradient(160deg,
+    rgba(255,255,255,.72) 0%,
+    rgba(232,238,245,.68) 100%);
+  --nx-glass-blur:.875rem;
+  --nx-marker-bg:rgba(255,255,255,.92);
+  --nx-unit-bg:rgba(255,255,255,.72);
+
+  --nx-feed-gradient:linear-gradient(160deg,#E2E8F0,#F8FAFC);
+
+  --nx-hover-soft:rgba(15,23,42,.04);
+  --nx-hover-strong:rgba(15,23,42,.06);
+  --nx-fill-faint:rgba(15,23,42,.06);
+  --nx-text-watermark:rgba(15,23,42,.35);
+
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+  --shadow-md:0 4px 16px rgba(15,23,42,.08);
+  --shadow-lg:0 12px 28px rgba(15,23,42,.12);
+  --focus-ring-offset:0 0 0 2px var(--bg-main),0 0 0 4px rgba(var(--accent-blue-rgb),.45);
+  --nx-focus-ring-map:0 0 0 2px #fff,0 0 0 4px rgba(var(--accent-blue-rgb),.85);
+
+  --nx-donut-track:rgba(15,23,42,.1);
 }
 
 @media (prefers-reduced-motion:reduce){

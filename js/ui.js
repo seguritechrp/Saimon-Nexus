@@ -44,7 +44,7 @@ function render(key){
     return `<div class="sector">
       <div class="donut">
         <svg viewBox="0 0 48 48" aria-hidden="true">
-          <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="4"/>
+          <circle cx="24" cy="24" r="20" fill="none" stroke="var(--nx-donut-track)" stroke-width="4"/>
           <circle cx="24" cy="24" r="20" fill="none" stroke="var(${s.c})" stroke-width="4"
                   stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
         </svg>

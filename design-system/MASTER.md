@@ -16,7 +16,10 @@ CAD Lite es **préstamo**, no el sistema de este producto. No copiar su Master e
 ## 0. Acuerdos de esta etapa
 
 1. Paleta, Poppins, espaciado, radios, sombras, foco, motion, `.btn` y `.status` vienen de CAD Lite.
-2. Nexus es otro producto: monitor 1920×1080, tres columnas, mapa táctico, IA autónoma, solo oscuro.
+2. Nexus es otro producto: monitor 1920×1080, tres columnas, mapa táctico, IA autónoma.
+   Temas: `html[data-theme="dark"|"light"]`. El toggle **Claro / Oscuro** vive en
+   `.topnav__theme` (`#theme-toggle`) y sincroniza la cartografía OpenFreeMap
+   (día/noche) con el tema de UI.
 3. Sala de control (criticidad alta): ver §5.
 4. Sigue siendo **maqueta**. Datos, calles y cifras son ilustrativos (`js/data.js`).
 5. Un valor nuevo se nombra `--nx-*` en `tokens.css` **antes** de usarse en otra hoja.
@@ -101,7 +104,24 @@ Igual que CAD Lite: `--border-color`, `--border-color-light`, `--border-input`;
 | `.btn` `.btn--primary` `.btn--ghost` `.btn--block` | Acciones. Una primaria por bloque. |
 | `.status` `--danger` `--warning` `--success` `--info` | Estado + texto. Color nunca solo. |
 
-Tema claro de CAD Lite: **deuda consciente**. Sala de control opera en oscuro. No implementar hasta que se pida.
+### Tema claro (`html[data-theme="light"]`)
+
+Opcional vía toggle (por defecto el producto carga oscuro + mapa noche).
+Valores en `tokens.css` bajo `html[data-theme="light"]`. Referencia: paneles
+blancos flotantes (~74% + blur), texto carbón, acento azul, mapa Bright.
+
+| Token | Valor light (resumen) |
+|---|---|
+| `--bg-main` / `--nx-surface-map` | `#E8EEF5` |
+| `--bg-header-top` / raised solid | `#FFFFFF` |
+| `--nx-glass` / `--nx-glass-soft` | degradado blanco → `#F3F6FA` → `#DBEAFE` (~74%) |
+| `--text-primary` | `#0F172A` |
+| `--text-secondary` / muted | `#475569` / `#64748B` |
+| `--border-color` | `#D0D7E2` |
+| `--shadow-*` | sombras frías suaves (`rgba(15,23,42,…)`) |
+| `--nx-donut-track` | `rgba(15,23,42,.1)` |
+
+Logo topnav: `LOGO-SAIMON-NEXUS-AZUL.png` en light; wordmark blanco en dark.
 
 ---
 
@@ -116,8 +136,10 @@ Prefijo `--nx-*`. Cualquier literal nuevo de producto entra por aquí.
 | `--nx-surface-map` | `#0C1729` | Fondo del mapa. Lo aplica `js/map.js` al estilo de MapLibre |
 | `--nx-map-water` | `#0A1930` | Agua del mapa. También vía `js/map.js` |
 | `--nx-map-building` | `#20355C` | Edificios extruidos. También vía `js/map.js` |
-| `--nx-surface-raised-solid` | `#0f1c33` | Cabecera opaca de panel flotante |
-| `--nx-surface-raised` | `color-mix(… 94%, transparent)` | Cuerpo de panel flotante sobre el mapa |
+| `--nx-surface-raised-solid` | `#0f1c33` | Base de panel flotante (antes de mezclar) |
+| `--nx-surface-raised` | `color-mix(… 90%, transparent)` | Cuerpo de panel flotante sobre el mapa |
+| `--nx-glass` / `--nx-glass-soft` | degradado `#0f1c33` → `#15243E` → `#233a63` (~74%) | HUD / widgets sobre el mapa |
+| `--nx-glass-blur` | `.75rem` | `backdrop-filter` del vidrio |
 | `--nx-surface-sunken` | `#101C33` | Filas, pozos |
 | `--nx-border-soft` | `rgba(255,255,255,.07)` | Separadores de shell |
 
@@ -145,16 +167,20 @@ Cifras: `font-variant-numeric: tabular-nums` en `body`.
 
 | Token | Valor | Uso |
 |---|---|---|
-| `--nx-header-h` | 4rem | Encabezado desplegado |
-| `--nx-header-h-min` | 2rem | Encabezado plegado (`.shell.is-head-min`) |
+| `--nx-topnav-h` | 3rem | Barra de módulos (logo + nav + usuario) |
+| `--nx-z-topnav` | 30 | Encima de paneles flotantes |
+| `--nx-header-h` | 4rem | Legado: encabezado desplegado |
+| `--nx-header-h-min` | 2rem | Legado: encabezado plegado |
 | `--nx-col-left` | 23rem (368px) | Panel de métricas (flotante) |
 | `--nx-col-right` | 26rem (416px) | Panel de IA (flotante) |
 | `--nx-panel-gap` | `.75rem` | Aire alrededor de los paneles; también padding de MapLibre |
-| Centro | `minmax(0,1fr)` a fila completa | El mapa llena debajo del encabezado |
+| Centro | fila `stage` bajo topnav | El mapa llena `.shell__stage` |
 
-Áreas: `map` a viewport completo. `.left` y `.ai` flotan bajo el slot de marca
-(`.map-brand` arriba-izquierda). Las capas (`.layers`) se centran en el corredor
-del mapa. Nada migra de columna sin discusión.
+Áreas: `topnav` + `stage`. El mapa y los paneles operativos viven en
+`.shell__stage`. La navegación de módulos es `.topnav` (logo, Mapa /
+Monitoreo / Administración / Tableros, contexto de sala, usuario).
+`.left` y `.ai` flotan sobre el mapa. Las capas (`.layers`) se centran en el
+corredor. Nada migra de columna sin discusión.
 
 **Modelo B:** el selector de dominio cambia **solo** la columna izquierda. Mapa y panel de IA siguen en contexto de seguridad.
 
@@ -168,11 +194,19 @@ del mapa. Nada migra de columna sin discusión.
 
 ### Componentes propios (ya en código)
 
-Encabezado: `.map-brand` (logo + ciudad + clima + avatar), `.avatar`.  
-Shell: mapa a pantalla completa; sin fila de encabezado fija.  
+Encabezado: `.topnav` (logo, módulos, ciudad/reloj/clima, `.topnav__theme`, `.topnav__user` + `.avatar`).  
+Shell: topnav fija + `.shell__stage` con mapa a pantalla del escenario.  
+Módulos fuera de Operación: `.module-pane`. Monitoreo: `.module-pane--monitor` +
+`.monitor` (grid flota | viewport; HUD glass `.monitor-glass`).
+Cuadrícula de cámaras (`.monitor__view-toggle`): 1 / 2 / 4 / 9. Modo 1 = stream + HUD;
+2/4/9 = `.monitor__camgrid` (foco primero; doble click o «Vista 1» → layout 1).
+Flota: solo cartas + buscador/filtro (`.monitor__query`). Splitter de ancho.
+HUD foco: `.monitor__unit`, `.monitor__log`, `.monitor__control`, `.monitor__minimap`
+(inf. centro; resize NW; doble clic → mapa), `.monitor__timeline` (grabación mock;
+toggle `.monitor__tl-open`; default oculto; filmstrip + marcadores de alerta; EN VIVO/REPLAY).  
 Izquierda: `.domains` / `.domain`, `.headline-*`, `.delta` / `.delta--*`, `.spark`, `.row`, `.sector` / `.donut`, `.kpi`, `.picker`.  
 Mapa: `.layers` / `.layer`, `.marker--*` (+ `.marker-anchor`), `.radar`, `.popcard`,
-`.devcard`, `.map-dock`, `.agent-orb`, `.ctx`, `.mapctl`, `.mapview`.  
+`.devcard`, `.map-dock`, `.agent-orb`, `.ctx`, `.mapctl`.  
 IA: `.ai-card` (+ `--thread` / `--plan` / `--fleet` / `--inventory` / `--routes-*`), `.ai-live`, `.case`, `.chain` (+ `.chain__step`), `.case__scope` / `.case__actions`, `.disp` / `.unit`, `.log` (+ `.log__dot--*`), `.agents` / `.agent`, `.autonomy__btn`, `.fleet` / `.device` / `.chip` / `.dsec`, `.route` / `.route-detail` / `.route-itin`.
 
 **Jerarquía de la columna derecha.** Los dos frenos viven en el head de cada
@@ -471,10 +505,10 @@ huecos entre categorías, sectores e indicadores.
    **Vigía** abre `#ai-panel`; **Dispositivos** abre `#devices-panel`; **Rutas**
    abre `#routes-panel`; **Incidentes** abre `#incidents-panel`. Mutuamente
    excluyentes. `shell.is-right-open` reserva padding e insets.
-2. **`.devcard`** — ficha de recurso en el muelle (foto `saimon-robot.jpg`).
-   Arranca oculta; clic en ZM-14 / A-07 / DR-03 la despliega (y otro clic la
-   cierra). Botón × también cierra. Al abrir, el marcador ligado en el mapa
-   crece, emite ondas (`.marker-ping`) y muestra un callout con el código.
+2. **`.devcard`** — ficha de misión en el muelle (horizontal): `.mission-track`
+   (línea de tiempo done/active/wait) + aside con stream y resumen
+   (código, destino, badge, ETA). Arranca oculta; clic en unidad/dispositivo
+   la abre. × cierra. El marcador ligado crece, emite `.marker-ping` y callout.
 
 ## 18. Lote 10 — salud de dispositivos, 18 de septiembre de 2026
 

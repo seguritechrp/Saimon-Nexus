@@ -250,12 +250,7 @@
       window.nexusOpenDevcardUnit("demoDrone", {
         stream: pack.drone,
         cam: "DR-09",
-        skipMapFocus: true,
-        rows:[
-          ["Operación","Desplegado","Accidente"],
-          ["Óptica","Live arco/unidad","ARC-02"],
-          ["Estado","En misión","Activo"]
-        ]
+        skipMapFocus: true
       });
     }
     showAllAssigned(inc);
@@ -333,12 +328,7 @@
         if(typeof window.nexusOpenDevcardUnit === "function"){
           window.nexusOpenDevcardUnit("demoRobot", {
             stream: pack.robot,
-            cam: UNIT_CODES.demoRobot,
-            rows:[
-              ["En ruta","ETA 4 min","Accidente"],
-              ["Prioridad","Alta","Despacho"],
-              ["Estado","Asignada","Activo"]
-            ]
+            cam: UNIT_CODES.demoRobot
           });
         }
       } },
@@ -347,12 +337,7 @@
         if(typeof window.nexusOpenDevcardUnit === "function"){
           window.nexusOpenDevcardUnit("demoAmb", {
             stream: pack.amb,
-            cam: UNIT_CODES.demoAmb,
-            rows:[
-              ["En ruta","ETA 6 min","Apoyo"],
-              ["Misión","Contención","Listo"],
-              ["Estado","Asignada","Activo"]
-            ]
+            cam: UNIT_CODES.demoAmb
           });
         }
       } },
@@ -362,12 +347,7 @@
         if(typeof window.nexusOpenDevcardUnit === "function"){
           window.nexusOpenDevcardUnit("demoDrone", {
             stream: pack.drone,
-            cam: UNIT_CODES.demoDrone,
-            rows:[
-              ["Operación","Desplegado","Óptica"],
-              ["Altitud","80 m AGL","Live"],
-              ["Estado","En misión","Activo"]
-            ]
+            cam: UNIT_CODES.demoDrone
           });
         }
       } },
