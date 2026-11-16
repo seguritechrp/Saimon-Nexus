@@ -19,6 +19,9 @@ function sparkline(data){
 
 function render(key){
   const d = DOMAINS[key];
+  /* Oficiales de campo solo aparecen en el dominio Seguridad. */
+  const fieldSec = document.getElementById("sec-field");
+  if(fieldSec) fieldSec.hidden = key !== "seguridad";
   $("#sum-title").textContent = d.section;
   $("#hl-label").textContent  = d.label;
   $("#hl-value").textContent  = d.value;

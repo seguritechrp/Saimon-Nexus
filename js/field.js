@@ -2274,6 +2274,32 @@
     }
   };
 
+  /* ---------- métricas de Seguridad: oficiales por estado, radios y alertas ----------
+     Mismas definiciones que el panel de radios: encendido incluye los que
+     están en llamada; apagado es radio fuera de servicio. */
+  const renderFieldMetrics = () => {
+    if(!document.getElementById("sec-field")) return;
+    let on = 0, off = 0, call = 0, alertas = 0;
+    const porEstado = {};
+    ops.forEach(o => {
+      const rs = radioState(o);
+      if(rs === "apagado") off += 1; else on += 1;
+      if(rs === "llamada") call += 1;
+      if(alertActive(o)) alertas += 1;
+      const k = opEstado(o);
+      porEstado[k] = (porEstado[k] || 0) + 1;
+    });
+    setTextIn("fsec-on", String(on));
+    setTextIn("fsec-off", String(off));
+    setTextIn("fsec-alert", String(alertas));
+    setTextIn("fsec-total", `${ops.length} oficiales · ${call} en llamada`);
+    document.querySelector(".fsec__tile--alert")?.classList.toggle("is-on", alertas > 0);
+    putHtml(document.getElementById("fsec-states"), Object.keys(FIELD_STATUS).map(k => {
+      const m = FIELD_STATUS[k];
+      return `<li class="fsec__state fsec__state--${esc(m.tone)}"><b>${porEstado[k] || 0}</b>${esc(m.label)}</li>`;
+    }).join(""));
+  };
+
   /* ---------- render general ---------- */
   const render = (force = false) => {
     const live = force || !busy;
@@ -2289,6 +2315,7 @@
       renderInventory();
       renderRadios();
       renderAiField();
+      renderFieldMetrics();
     }
     if(mode === "field"){
       renderStage();

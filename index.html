@@ -15,9 +15,9 @@
 
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/layout.css?v=fase7b">
 <link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/field.css?v=fase6b">
+<link rel="stylesheet" href="css/field.css?v=fase7b">
 </head>
 <body>
 
@@ -125,6 +125,29 @@
           </svg>
           <div class="spark__axis"><span>00</span><span>04</span><span>08</span><span>12</span><span>16</span><span>20</span><span>24 h</span></div>
         </div>
+      </section>
+
+      <!-- Oficiales de campo — solo dominio Seguridad (datos de field.js) -->
+      <section class="fsec" id="sec-field" aria-labelledby="fsec-title">
+        <div class="sect__head">
+          <h2 class="sect__title" id="fsec-title">Oficiales de campo</h2>
+          <span class="fsec__total" id="fsec-total"></span>
+        </div>
+        <div class="fsec__tiles">
+          <div class="fsec__tile">
+            <span class="fsec__n" id="fsec-on">0</span>
+            <span class="fsec__l">Radios encendidos</span>
+          </div>
+          <div class="fsec__tile">
+            <span class="fsec__n" id="fsec-off">0</span>
+            <span class="fsec__l">Radios apagados</span>
+          </div>
+          <div class="fsec__tile fsec__tile--alert">
+            <span class="fsec__n" id="fsec-alert">0</span>
+            <span class="fsec__l">Alertas activas</span>
+          </div>
+        </div>
+        <ul class="fsec__states" id="fsec-states" aria-label="Oficiales por estado"></ul>
       </section>
 
       <!-- Categorías -->
@@ -1315,7 +1338,7 @@
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="js/data.js?v=fase1"></script>
-<script src="js/ui.js"></script>
+<script src="js/ui.js?v=fase7"></script>
 <script src="js/shell.js"></script>
 <script src="js/map.js"></script>
 <script src="js/ai.js"></script>
@@ -1324,6 +1347,6 @@
 <script src="js/incidents.js"></script>
 <script src="js/demo-alert.js"></script>
 <script src="js/monitor.js"></script>
-<script src="js/field.js?v=fase6b"></script>
+<script src="js/field.js?v=fase7"></script>
 </body>
 </html>
