@@ -519,6 +519,9 @@ Panel derecho del modo Dispositivos: inventario con salud operativa.
 2. **Card inventario** — búsqueda + chips de estado (incl. Críticos) y tipo;
    lista agrupada por sector (acordeón). Clic enfoca marcador en el mapa.
 3. **Datos** — `DEVICES` en `js/data.js`; UI en `js/devices.js`.
+4. **Equipo de campo** — arriba del inventario de flota. Cada fila es un
+   dispositivo (bodycam, cámara de patrulla o radio) con su código y estado.
+   Debajo, solo el oficial asignado. Clic abre la ficha de ese oficial.
 
 ## 20. Lote 12 — rutas de despacho animadas, 18 de septiembre de 2026
 
@@ -580,3 +583,45 @@ Se retira el encabezado de fila completa. El mapa ocupa el viewport.
 2. **`.layers`** — centradas en el corredor entre paneles (misma franja superior).
 3. **Fuera de esta maqueta:** búsqueda ⌘K, sysok, notificaciones, pliegue
    `is-head-min`.
+
+## 23. Ficha vertical de oficial, 9 de noviembre de 2026
+
+Los dispositivos siguen en `.devcard` (horizontal). El oficial usa `.ofcard`,
+vertical, en el mismo muelle, para distinguir humano de dispositivo.
+
+1. **Identidad** — iniciales (sin foto), nombre, rol, placa, estado y hora.
+2. **Dispositivos** — bodycam, radio y cámara de patrulla, con texto de estado.
+   En el marcador, tres puntos en orden bodycam, patrulla, radio: verde si
+   está en línea y rojo si está fuera de línea. Sin otros colores.
+3. **Streaming** — los recuadros de bodycam y patrulla eligen la cámara.
+   En línea: se ve ese streaming. Fuera de línea: el recuadro trae
+   «Pedir video» (simulado; al aceptar, el dispositivo vuelve en línea).
+   El radio no cambia la cámara. Sin señal: texto, no un video en vivo.
+4. **Radio** — «Hablar» (mantener) reutiliza la simulación de `field.js`.
+   La ficha no tiene llamada. Sin audio real. El botón de otra ventana sigue sin acción.
+5. **Estados** — patrulla, incidente, video, comunicación, emergencia y sin
+   transmisión salen del oficial. Pedir video y hablar usan la simulación.
+   La ficha mide 23.5 rem de ancho (más angosta que el devcard de dispositivos).
+   Actividad es una propuesta ilustrativa, igual para todos.
+6. **Incidente asignado** — uno solo, el del operativo, y se abre en el mapa.
+   Sin asignación se lee «Sin incidente asignado».
+7. **Video del oficial** — bodycam y patrulla usan los tres clips de cámara
+   (`cam-bodycam`, `cam-colision`, `cam-patrulla`). Las cámaras fijas de la
+   ciudad siguen con su propio material.
+8. **Evidencia de campo** — oculta de momento en el detalle del incidente,
+   en la ficha del oficial y en el monitoreo de campo.
+9. **Ruta al incidente** — al seleccionar un incidente, el oficial asignado
+   se marca y dibuja su ruta igual que las unidades (color cian).
+10. **Monitoreo de oficiales** — mismo lenguaje que la flota de robots.
+    El filtro de estatus es el botón con menú (no chips visibles).
+    La tarjeta de la lista usa `.monitor__item`: fondo `--nx-fill-faint`,
+    texto primario, iniciales en lugar de foto.
+    La cámara es un HUD: datos arriba a la izquierda, mapa abajo al centro,
+    detalle y transmisiones recientes en el panel de la hamburguesa,
+    y «Hablar» (mantener) donde los robots tienen Autónomo/Manual.
+    La cuadrícula del oficial es solo 1 o 2. El 2 muestra bodycam y
+    cámara de patrulla del oficial seleccionado.
+    La alerta de emergencia es una barra roja sólida, con texto blanco.
+    En la vista 1, abajo a la derecha: un recuadro con la otra cámara
+    (clic intercambia bodycam y patrulla) y, a su derecha, la línea de
+    tiempo de grabación, el mismo control que en los robots.

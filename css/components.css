@@ -142,65 +142,58 @@
    geográfico y deja que .marker conserve el suyo y su hover. */
 .marker-anchor{width:0;height:0}
 
+/* Pin con degradado. La punta cae en la coordenada; el icono queda
+   en el centro del círculo. El color es el tipo, o la prioridad
+   si es incidente. El degradado se pinta antes de girar la forma:
+   bottom-left es la punta y, tras rotate(-45deg), queda abajo. */
 .marker{
-  position:absolute;transform:translate(-50%,-50%);width:2rem;height:2rem;
-  border-radius:var(--border-radius-md);display:grid;place-items:center;cursor:pointer;
-  border:1.5px solid;background:var(--nx-marker-bg);
+  --pin-head:1.55rem;--pin-head-top:.05rem;--marker-pin:var(--accent-blue);
+  position:absolute;isolation:isolate;cursor:pointer;
+  width:1.85rem;height:2.35rem;border:0;background:transparent;box-shadow:none;
+  color:var(--text-on-accent);
+  transform:translate(-50%,-100%);transform-origin:center bottom;
   transition:transform var(--duration-fast) var(--ease-out);
 }
 
-.marker svg{width:1.0625rem;height:1.0625rem}
+.marker svg{
+  position:absolute;z-index:1;width:.82rem;height:.82rem;margin:0;
+  left:50%;top:calc(var(--pin-head-top) + var(--pin-head) / 2);
+  transform:translate(-50%,-50%);
+}
 
-.marker:hover{transform:translate(-50%,-50%) scale(1.14);z-index:var(--z-base)}
+.marker::before{
+  content:"";position:absolute;left:50%;top:var(--pin-head-top);z-index:0;
+  width:var(--pin-head);height:var(--pin-head);box-sizing:border-box;
+  border:0;border-radius:50% 50% 50% 0;
+  transform:translateX(-50%) rotate(-45deg);
+  background:linear-gradient(to bottom left,
+    var(--marker-pin),
+    color-mix(in srgb,var(--marker-pin) 46%,#000));
+  box-shadow:var(--shadow-md);
+}
 
-.marker-anchor.is-focus .marker:hover{transform:translate(-50%,-50%) scale(1.55)}
+.marker:hover{transform:translate(-50%,-100%) scale(1.14);z-index:var(--z-base)}
+
+.marker-anchor.is-focus .marker:hover{transform:translate(-50%,-100%) scale(1.55)}
 
 .marker[hidden]{display:none}
 
-.marker--camara{border-color:var(--accent-cyan);color:var(--nx-tint-cyan);box-shadow:0 0 .875rem rgba(var(--accent-cyan-rgb),.3)}
+.marker--camara{--marker-pin:var(--accent-cyan)}
+.marker--dron,
+.marker--dron.marker--ops-deployed{--marker-pin:var(--accent-green)}
+.marker--dron.marker--ops-hangar{--marker-pin:var(--accent-dark-blue);color:var(--text-secondary);opacity:.92}
+.marker--perro{--marker-pin:var(--accent-purple)}
+.marker--humanoide{--marker-pin:var(--accent-blue)}
+.marker--arco{--marker-pin:var(--accent-orange)}
 
-.marker--dron{border-color:var(--accent-green);color:var(--nx-tint-green);box-shadow:0 0 .875rem rgba(var(--accent-green-rgb),.3)}
-
-.marker--dron.marker--ops-deployed{
-  border-color:var(--accent-green);color:var(--nx-tint-green);
-  box-shadow:0 0 .875rem rgba(var(--accent-green-rgb),.35);
-}
-
-.marker--dron.marker--ops-hangar{
-  border-color:var(--nx-border-neutral);color:var(--nx-tint-neutral);
-  box-shadow:0 0 .75rem rgba(139,147,167,.28);
-  opacity:.92;
-}
-
-.marker--perro{border-color:var(--accent-purple);color:var(--nx-tint-purple);box-shadow:0 0 .875rem rgba(var(--accent-purple-rgb),.3)}
-
-.marker--humanoide{border-color:var(--accent-blue);color:var(--nx-tint-blue);box-shadow:0 0 .875rem rgba(var(--accent-blue-rgb),.35)}
-
-.marker--arco{border-color:var(--accent-orange);color:var(--nx-tint-orange);box-shadow:0 0 .875rem rgba(var(--accent-orange-rgb),.3)}
-
-/* Incidente: pin circular. Color = prioridad (alta / media / baja). */
 .marker--incidente{
-  width:2.5rem;height:2.5rem;border-radius:var(--radius-circle);
-  border-color:var(--accent-red);color:var(--text-primary);background:rgba(var(--accent-red-rgb),.22);
-  box-shadow:0 0 1.5rem rgba(var(--accent-red-rgb),.5);
+  --pin-head:1.75rem;--marker-pin:var(--accent-red);
+  width:2.05rem;height:2.55rem;
 }
-
-.marker--incidente.marker--prio-high{
-  border-color:var(--accent-red);color:var(--nx-tint-red);background:rgba(var(--accent-red-rgb),.22);
-  box-shadow:0 0 1.5rem rgba(var(--accent-red-rgb),.5);
-}
-
-.marker--incidente.marker--prio-medium{
-  border-color:var(--accent-orange);color:var(--nx-tint-orange);background:rgba(var(--accent-orange-rgb),.22);
-  box-shadow:0 0 1.5rem rgba(var(--accent-orange-rgb),.5);
-}
-
-.marker--incidente.marker--prio-low{
-  border-color:var(--accent-green);color:var(--nx-tint-green);background:rgba(var(--accent-green-rgb),.22);
-  box-shadow:0 0 1.5rem rgba(var(--accent-green-rgb),.5);
-}
-
-.marker--incidente svg{width:1.25rem;height:1.25rem}
+.marker--incidente svg{width:.95rem;height:.95rem}
+.marker--incidente.marker--prio-high{--marker-pin:var(--accent-red)}
+.marker--incidente.marker--prio-medium{--marker-pin:var(--accent-orange)}
+.marker--incidente.marker--prio-low{--marker-pin:var(--accent-green)}
 
 /* Selección de recurso despachado: crece, emite ondas y muestra nombre */
 .marker-anchor.is-focus,
@@ -208,23 +201,8 @@
 
 .marker-anchor.is-focus .marker,
 .marker-anchor.is-assigned .marker{
-  transform:translate(-50%,-50%) scale(1.55);
-  box-shadow:0 0 1.75rem rgba(var(--accent-blue-rgb),.55);
-}
-
-.marker-anchor.is-focus .marker--dron,
-.marker-anchor.is-assigned .marker--dron{
-  box-shadow:0 0 1.75rem rgba(var(--accent-green-rgb),.55);
-}
-
-.marker-anchor.is-focus .marker--perro,
-.marker-anchor.is-assigned .marker--perro{
-  box-shadow:0 0 1.75rem rgba(var(--accent-purple-rgb),.55);
-}
-
-.marker-anchor.is-focus .marker--humanoide,
-.marker-anchor.is-assigned .marker--humanoide{
-  box-shadow:0 0 1.75rem rgba(var(--accent-blue-rgb),.55);
+  transform:translate(-50%,-100%) scale(1.55);
+  box-shadow:none;
 }
 
 .marker-ping{
@@ -276,20 +254,8 @@
   border-color:rgba(var(--accent-green-rgb),.55);
 }
 
-.marker-anchor.is-focus .marker--incidente.marker--prio-high{
-  box-shadow:0 0 1.75rem rgba(var(--accent-red-rgb),.55);
-}
-
-.marker-anchor.is-focus .marker--incidente.marker--prio-medium{
-  box-shadow:0 0 1.75rem rgba(var(--accent-orange-rgb),.55);
-}
-
-.marker-anchor.is-focus .marker--incidente.marker--prio-low{
-  box-shadow:0 0 1.75rem rgba(var(--accent-green-rgb),.55);
-}
-
 .marker-callout{
-  position:absolute;left:50%;bottom:1.85rem;transform:translateX(-50%);
+  position:absolute;left:50%;bottom:2.7rem;transform:translateX(-50%);
   display:grid;gap:.125rem;justify-items:center;padding:.3rem .55rem;
   white-space:nowrap;pointer-events:none;
   background:var(--nx-glass);border:1px solid var(--border-color-light);
@@ -410,7 +376,7 @@
 }
 
 .devcard--simple .devcard__head{
-  align-items:center;padding-right:1.75rem;
+  align-items:center;padding-right:6.25rem;
 }
 
 .devcard--simple .devcard__unit{
@@ -437,23 +403,35 @@
   border-top:1px solid var(--nx-border-soft);
 }
 
-.devcard--simple .devcard__close{
+.devcard--simple .devcard__actions{
   top:.4rem;right:.4rem;
 }
 
 .devcard[hidden]{display:none !important}
 
-.devcard__close{
+.devcard__actions{
   position:absolute;top:.5rem;right:.5rem;z-index:2;
-  color:var(--text-muted);font-size:var(--nx-text-lg);line-height:1;
-  width:1.75rem;height:1.75rem;display:grid;place-items:center;
-  padding:0;background:var(--nx-glass);border:1px solid var(--nx-border-soft);
-  border-radius:var(--radius-circle);cursor:pointer;
-  backdrop-filter:blur(var(--nx-glass-blur));
+  display:flex;align-items:center;gap:.35rem;
 }
 
+.devcard__action,
+.devcard__close{
+  color:var(--text-primary);font-size:var(--nx-text-lg);line-height:1;
+  width:1.75rem;height:1.75rem;display:grid;place-items:center;
+  padding:0;background:var(--nx-surface-raised-solid);
+  border:1px solid var(--border-color-light);
+  border-radius:var(--radius-circle);cursor:pointer;
+  box-shadow:var(--shadow-md);
+}
+
+.devcard__action[hidden]{display:none}
+
+.devcard__action svg{width:1rem;height:1rem}
+
+.devcard__action:hover,
 .devcard__close:hover{color:var(--text-primary);border-color:var(--border-color-light)}
 
+.devcard__action:focus-visible,
 .devcard__close:focus-visible{box-shadow:var(--focus-ring)}
 
 .devcard__main{

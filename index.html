@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/field.css?v=fase6b">
 </head>
 <body>
 
@@ -181,6 +182,19 @@
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 19V9h18v10"/><path d="M3 9h18"/><path d="M7 9v5M12 9v5M17 9v5"/><path d="M5 19h3M16 19h3"/><rect x="8" y="11" width="8" height="2.5" rx=".4"/></svg>
         Arcos <span class="layer__count">42</span>
       </button>
+      <span class="layers__break" aria-hidden="true"></span>
+      <button class="layer" type="button" aria-pressed="true" data-layer="bodycam">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="7" width="12" height="10" rx="2.5"/><circle cx="12" cy="12" r="2.4"/><path d="M9 7 10 5h4l1 2"/></svg>
+        Bodycams <span class="layer__count">5</span>
+      </button>
+      <button class="layer" type="button" aria-pressed="true" data-layer="radio">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="8" width="10" height="12" rx="2"/><path d="M10 8V4.5M14 8V4.5"/><path d="M10 12.5h4M10 15.5h4"/></svg>
+        Radios <span class="layer__count">5</span>
+      </button>
+      <button class="layer" type="button" aria-pressed="true" data-layer="patrulla">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 15.5 5.5 10h10.5l3 3.5v2H3v-0Z"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="17" cy="16.5" r="1.6"/><path d="M8 10 9.5 7h4.5"/></svg>
+        Patrullas <span class="layer__count">5</span>
+      </button>
     </div>
 
     <!-- Radar + incidente principal: ambos anclados al mismo punto -->
@@ -210,6 +224,8 @@
                 data-mode="devices" aria-pressed="false">Dispositivos</button>
         <button type="button" class="agent-orb__action" style="--i:3"
                 data-mode="incidents" aria-pressed="false">Incidentes</button>
+        <button type="button" class="agent-orb__action" style="--i:4"
+                data-mode="radios" aria-pressed="false">Radios</button>
       </nav>
       <div class="agent-orb__figure" aria-hidden="true">
         <div class="agent-orb__pad"></div>
@@ -237,7 +253,22 @@
     <!-- Muelle inferior derecho: card de robot + controles (sin solaparse). -->
     <div class="map-dock map__inset-right">
       <div class="devcard" id="devcard" hidden>
-        <button class="devcard__close" type="button" aria-label="Cerrar ficha de recurso">×</button>
+        <div class="devcard__actions">
+          <button type="button" class="devcard__action" id="devcard-monitor" hidden
+                  aria-label="Ver en módulo de monitoreo" title="Ver en módulo de monitoreo">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>
+            </svg>
+          </button>
+          <!-- Pendiente: abrir esta ficha en otra ventana del navegador. -->
+          <button type="button" class="devcard__action" id="devcard-popout"
+                  aria-label="Abrir ficha en nueva ventana" title="Abrir en nueva ventana">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M14 5h5v5M19 5l-9 9"/><path d="M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>
+            </svg>
+          </button>
+          <button class="devcard__close" type="button" aria-label="Cerrar ficha de recurso">×</button>
+        </div>
         <div class="devcard__main">
           <div class="devcard__head">
             <div class="devcard__brand">
@@ -255,6 +286,7 @@
           <div class="devcard__unit">
             <img class="devcard__model" id="devcard-model" src="assets/saimon-robot.jpg"
                  alt="" width="120" height="90" decoding="async">
+            <span class="devcard__initials" id="devcard-initials" hidden></span>
             <div class="devcard__summary">
               <p class="devcard__code" id="devcard-code">#ZM-14</p>
               <p class="devcard__dest" id="devcard-dest">Hacia Sector 1 Norte</p>
@@ -271,6 +303,200 @@
           </div>
         </aside>
       </div>
+
+      <article class="ofcard" id="ofcard" hidden aria-labelledby="ofcard-name">
+        <div class="ofcard__alert" id="ofcard-alert" hidden role="alert">
+          <span class="ofcard__alert-icon" aria-hidden="true">!</span>
+          <span class="ofcard__alert-text">
+            <span class="ofcard__alert-title" id="ofcard-alert-title">Alerta</span>
+            <span class="ofcard__alert-meta" id="ofcard-alert-meta"></span>
+          </span>
+          <span class="ofcard__alert-actions">
+            <button type="button" class="ofcard__alert-btn" id="ofcard-alert-att">Marcar atendida</button>
+            <button type="button" class="ofcard__alert-btn is-primary" id="ofcard-alert-close">Cerrar alerta</button>
+          </span>
+        </div>
+        <div class="ofcard__scroll">
+          <header class="ofcard__id">
+            <span class="ofcard__avatar" id="ofcard-initials" aria-hidden="true">AR</span>
+            <div class="ofcard__who">
+              <div class="ofcard__name-row">
+                <h2 class="ofcard__name" id="ofcard-name">Oficial</h2>
+                <div class="devcard__actions ofcard__actions">
+                  <button type="button" class="devcard__action" id="ofcard-monitor"
+                          aria-label="Ver en módulo de monitoreo" title="Ver en módulo de monitoreo">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>
+                    </svg>
+                  </button>
+                  <!-- Pendiente: abrir esta ficha en otra ventana del navegador. -->
+                  <button type="button" class="devcard__action" id="ofcard-popout"
+                          aria-label="Abrir ficha en nueva ventana" title="Abrir en nueva ventana">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M14 5h5v5M19 5l-9 9"/><path d="M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>
+                    </svg>
+                  </button>
+                  <button class="devcard__close" type="button" id="ofcard-close" aria-label="Cerrar ficha de oficial">×</button>
+                </div>
+              </div>
+              <p class="ofcard__role" id="ofcard-role"></p>
+              <div class="ofcard__statusline">
+                <span class="ofcard__patrol" id="ofcard-patrol"></span>
+                <span class="ofcard__pill" id="ofcard-status">En patrulla</span>
+                <span class="ofcard__pill ofcard__pill--radio" id="ofcard-radio" data-state="encendido">Radio encendido</span>
+              </div>
+            </div>
+          </header>
+          <div class="ofcard__strip ofcard__strip--move" id="ofcard-move" aria-label="Movimiento y ubicación">
+            <span id="ofcard-move-mode">A pie</span>
+            <span id="ofcard-move-speed">0 km/h</span>
+            <span id="ofcard-move-head">Sin rumbo</span>
+            <span id="ofcard-move-src">Ubicación por radio</span>
+          </div>
+          <ul class="ofcard__devs" id="ofcard-devs" aria-label="Dispositivos del oficial"></ul>
+          <div class="ofcard__tabs" role="tablist" aria-label="Vistas de la ficha">
+            <button type="button" role="tab" data-oftab="op" aria-selected="true" class="is-active">Operación</button>
+            <button type="button" role="tab" data-oftab="msg" aria-selected="false">Mensajes <span class="ofcard__count" id="ofcard-msg-count" hidden>0</span></button>
+            <button type="button" role="tab" data-oftab="hist" aria-selected="false">Historial</button>
+            <button type="button" role="tab" data-oftab="act" aria-selected="false">Actividad</button>
+          </div>
+          <div id="ofcard-panel-op" role="tabpanel">
+            <section class="ofcard__block" aria-labelledby="ofcard-tx-title">
+              <div class="ofcard__block-head">
+                <h3 id="ofcard-tx-title">Transmisión</h3>
+                <span id="ofcard-stream-sum">Sin transmisión</span>
+              </div>
+              <div class="ofcard__switch" id="ofcard-switch" hidden role="group" aria-label="Cambiar cámara"></div>
+              <div class="ofcard__stage">
+                <div class="ofcard__media" id="ofcard-media"></div>
+                <div class="ofcard__empty" id="ofcard-empty" hidden></div>
+                <div class="ofcard__chips" id="ofcard-chips" hidden></div>
+              </div>
+            </section>
+            <section class="ofcard__block" aria-labelledby="ofcard-inc-title">
+              <div class="ofcard__block-head">
+                <h3 id="ofcard-inc-title">Incidente asignado</h3>
+              </div>
+              <ul class="ofcard__incs" id="ofcard-incs"></ul>
+            </section>
+            <section class="ofcard__block" aria-labelledby="ofcard-ev-title">
+              <div class="ofcard__block-head">
+                <h3 id="ofcard-ev-title">Evidencia</h3>
+                <span id="ofcard-ev-sum">Sin marcas</span>
+              </div>
+              <ul class="ofcard__list" id="ofcard-evidence"></ul>
+            </section>
+          </div>
+          <div id="ofcard-panel-msg" role="tabpanel" hidden>
+            <section class="ofcard__block" aria-labelledby="ofcard-msg-title">
+              <div class="ofcard__block-head">
+                <h3 id="ofcard-msg-title">Mensajes del radio</h3>
+                <span id="ofcard-msg-unread">Sin mensajes nuevos</span>
+              </div>
+              <ul class="ofcard__list ofcard__msgs" id="ofcard-msgs" aria-live="polite"></ul>
+            </section>
+            <form class="ofcard__composer" id="ofcard-msg-form" autocomplete="off">
+              <label class="ofcard__field">
+                <span>Mensaje al oficial</span>
+                <input type="text" id="ofcard-msg-input" maxlength="200" placeholder="Escribe un mensaje para el radio" autocomplete="off">
+              </label>
+              <span class="ofcard__form-row">
+                <span class="ofcard__form-hint" id="ofcard-msg-hint"></span>
+                <span class="ofcard__form-hint" id="ofcard-msg-len">0/200</span>
+                <button type="submit" class="ofcard__alert-btn is-primary" id="ofcard-msg-send" disabled>Enviar</button>
+              </span>
+            </form>
+          </div>
+          <div id="ofcard-panel-hist" role="tabpanel" hidden>
+            <section class="ofcard__block" aria-labelledby="ofcard-hs-title">
+              <div class="ofcard__block-head">
+                <h3 id="ofcard-hs-title">Teclas de radio</h3>
+                <span>Este turno</span>
+              </div>
+              <ul class="ofcard__list" id="ofcard-hist-states"></ul>
+            </section>
+            <section class="ofcard__block" aria-labelledby="ofcard-ha-title">
+              <div class="ofcard__block-head">
+                <h3 id="ofcard-ha-title">Alertas</h3>
+                <span>Este turno</span>
+              </div>
+              <ul class="ofcard__list" id="ofcard-hist-alerts"></ul>
+            </section>
+            <section class="ofcard__block" aria-labelledby="ofcard-hc-title">
+              <div class="ofcard__block-head">
+                <h3 id="ofcard-hc-title">Llamadas</h3>
+                <span>Este turno</span>
+              </div>
+              <ul class="ofcard__list" id="ofcard-hist-calls"></ul>
+            </section>
+          </div>
+          <div id="ofcard-panel-act" role="tabpanel" hidden>
+            <section class="ofcard__block" aria-labelledby="ofcard-act-title">
+              <div class="ofcard__block-head">
+                <h3 id="ofcard-act-title">Actividad de la semana</h3>
+                <span>Propuesta</span>
+              </div>
+              <div class="ofcard__chartbox">
+                <p class="ofcard__chart-title">Incidentes atendidos <span>Últimos 7 días · total 14</span></p>
+                <svg class="ofcard__chart" viewBox="0 0 320 128" role="img" aria-label="Propuesta ilustrativa. Incidentes por día: lunes 1, martes 3, miércoles 2, jueves 2, viernes 3, sábado 1, domingo 2">
+                  <path d="M28 20H308M28 60H308M28 100H308" fill="none" stroke="currentColor" stroke-opacity=".15"/>
+                  <path d="M28 76 L72 36 L116 56 L160 56 L204 36 L248 76 L292 56 L292 100 L28 100 Z" fill="rgba(var(--accent-blue-rgb),.16)"/>
+                  <path d="M28 76 L72 36 L116 56 L160 56 L204 36 L248 76 L292 56" fill="none" stroke="var(--accent-blue)" stroke-width="2"/>
+                  <g class="ofcard__chart-dots" fill="var(--bg-panel)" stroke="var(--accent-blue)" stroke-width="2">
+                    <circle cx="28" cy="76" r="3.5"/><circle cx="72" cy="36" r="3.5"/>
+                    <circle cx="116" cy="56" r="3.5"/><circle cx="160" cy="56" r="3.5"/>
+                    <circle cx="204" cy="36" r="3.5"/><circle cx="248" cy="76" r="3.5"/>
+                    <circle cx="292" cy="56" r="4.5"/>
+                  </g>
+                  <g class="ofcard__chart-vals" fill="var(--text-primary)" font-size="11" font-weight="600" text-anchor="middle">
+                    <text x="28" y="68">1</text><text x="72" y="28">3</text><text x="116" y="48">2</text>
+                    <text x="160" y="48">2</text><text x="204" y="28">3</text><text x="248" y="68">1</text>
+                    <text x="292" y="48">2</text>
+                  </g>
+                  <g fill="var(--text-secondary)" font-size="10" text-anchor="middle">
+                    <text x="28" y="118">Lun</text><text x="72" y="118">Mar</text><text x="116" y="118">Mié</text>
+                    <text x="160" y="118">Jue</text><text x="204" y="118">Vie</text><text x="248" y="118">Sáb</text>
+                    <text x="292" y="118" fill="var(--text-primary)">Dom</text>
+                  </g>
+                </svg>
+              </div>
+              <div class="ofcard__stats">
+                <div><b>14</b><span>Incidentes atendidos</span><small>↑ 8%</small></div>
+                <div><b>3.8 <em>min</em></b><span>Respuesta promedio</span><small>↓ 5%</small></div>
+                <div><b>6 h 20 <em>min</em></b><span>En servicio hoy</span><small>↑ 3%</small></div>
+              </div>
+              <p class="ofcard__hint">Propuesta ilustrativa. Estas cifras no salen del operativo.</p>
+            </section>
+          </div>
+        </div>
+        <div class="ofcard__strip ofcard__strip--call" id="ofcard-call" hidden>
+          <span id="ofcard-call-text"></span>
+          <button type="button" class="ofcard__alert-btn" id="ofcard-call-end">Colgar</button>
+        </div>
+        <div class="ofcard__strip ofcard__strip--listen" id="ofcard-listen" hidden>
+          <span id="ofcard-listen-text"></span>
+          <button type="button" class="ofcard__alert-btn" id="ofcard-listen-end">Fin escucha</button>
+        </div>
+        <form class="ofcard__strip ofcard__strip--form" id="ofcard-listen-form" hidden autocomplete="off">
+          <label class="ofcard__field">
+            <span>Motivo de la escucha</span>
+            <input type="text" id="ofcard-listen-motive" maxlength="80" placeholder="Ej. Verificar ruido reportado en la zona" autocomplete="off">
+          </label>
+          <span class="ofcard__form-row">
+            <span class="ofcard__form-hint" id="ofcard-listen-hint"></span>
+            <button type="button" class="ofcard__alert-btn" id="ofcard-listen-cancel">Cancelar</button>
+            <button type="submit" class="ofcard__alert-btn is-primary">Iniciar escucha</button>
+          </span>
+        </form>
+        <footer class="ofcard__foot" id="ofcard-foot">
+          <div class="ofcard__acts">
+            <button type="button" class="ofcard__act" id="ofcard-call-ind" title="Llamada individual al oficial">Llamar</button>
+            <button type="button" class="ofcard__act" id="ofcard-call-grp" title="Llamada al grupo del oficial">Grupo</button>
+            <button type="button" class="ofcard__act" id="ofcard-call-tel" title="Enlace telefónico con el reportante del incidente">Enlace tel.</button>
+            <button type="button" class="ofcard__act" id="ofcard-listen-btn" aria-expanded="false" title="Escucha ambiente con motivo">Escucha</button>
+          </div>
+        </footer>
+      </article>
 
       <div class="mapctl" role="group" aria-label="Controles del mapa">
         <button type="button" class="is-mock" data-mapctl="basemap" aria-label="Capas base"
@@ -297,6 +523,25 @@
   <!-- ══════════════ DERECHA — IA autónoma ══════════════ -->
   <aside class="ai" id="ai-panel" hidden inert data-ops-ui>
     <div class="ai__stack">
+      <!-- Cadena de campo — pasos de la IA sobre oficiales, señales y actividad (datos de field.js) -->
+      <section class="ai-card ai-card--field" aria-labelledby="fai-title">
+        <div class="ai-card__head">
+          <h2 class="ai-card__title" id="fai-title">Cadena de campo</h2>
+          <span class="fai-count" id="fai-count"></span>
+        </div>
+        <div class="ai-card__body">
+          <div id="fai-chains"></div>
+          <section class="fai-sec" aria-labelledby="fai-signals-title">
+            <h3 class="fai-sec__title" id="fai-signals-title">Señales vigiladas</h3>
+            <div class="log" id="fai-signals"></div>
+          </section>
+          <section class="fai-sec" aria-labelledby="fai-activity-title">
+            <h3 class="fai-sec__title" id="fai-activity-title">Actividad reciente</h3>
+            <div class="log" id="fai-activity"></div>
+          </section>
+        </div>
+      </section>
+
       <!-- Panel A — hilo de la IA (equivalente al chat de la referencia) -->
       <section class="ai-card ai-card--thread" aria-labelledby="ai-thread-title">
         <div class="ai-card__head">
@@ -502,7 +747,72 @@
             <button type="button" class="chip" data-filter-type="arco" aria-pressed="false">Arco</button>
           </div>
         </div>
-        <div class="ai-card__body inventory__body" id="devices-list"></div>
+        <div class="ai-card__body inventory__body" id="devices-scroll">
+          <div class="field-inv" id="field-inv" aria-label="Dispositivos de campo" hidden></div>
+          <div id="devices-list"></div>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <!-- ══════════════ DERECHA — Panel de radios (quinto modo del orbe) ══════════════ -->
+  <aside class="ai" id="radios-panel" hidden inert data-ops-ui>
+    <div class="ai__stack">
+      <section class="ai-card ai-card--radios" aria-labelledby="radios-title">
+        <div class="ai-card__head">
+          <h2 class="ai-card__title" id="radios-title">Radios</h2>
+          <span class="inventory__count" id="radios-sub" aria-live="polite"></span>
+        </div>
+        <div class="radios-sum" role="list" aria-label="Resumen de radios">
+          <div class="radios-sum__tile" role="listitem">
+            <span class="radios-sum__n" id="radios-sum-on">0</span>
+            <span class="radios-sum__l"><i class="radios-dot is-on" aria-hidden="true"></i>Encendidos</span>
+          </div>
+          <div class="radios-sum__tile" role="listitem">
+            <span class="radios-sum__n" id="radios-sum-off">0</span>
+            <span class="radios-sum__l"><i class="radios-dot is-off" aria-hidden="true"></i>Apagados</span>
+          </div>
+          <div class="radios-sum__tile" role="listitem">
+            <span class="radios-sum__n" id="radios-sum-call">0</span>
+            <span class="radios-sum__l"><i class="radios-dot is-call" aria-hidden="true"></i>En llamada</span>
+          </div>
+        </div>
+        <div class="inventory__tools">
+          <label class="inventory__search">
+            <span class="sr-only">Buscar por oficial o radio</span>
+            <input type="search" id="radios-search" placeholder="Buscar oficial o radio" autocomplete="off">
+          </label>
+          <div class="radios-filters">
+            <label class="radios-select">
+              <span>Estado</span>
+              <select id="radios-filter-status">
+                <option value="">Todos</option>
+                <option value="on">Encendido</option>
+                <option value="off">Apagado</option>
+                <option value="call">En llamada</option>
+              </select>
+            </label>
+            <label class="radios-select">
+              <span>Grupo</span>
+              <select id="radios-filter-group"><option value="">Todos</option></select>
+            </label>
+          </div>
+          <div class="radios-tabs" role="tablist" aria-label="Vista del panel">
+            <button type="button" class="radios-tab is-active" role="tab" data-rd-view="radios" aria-selected="true">Radios</button>
+            <button type="button" class="radios-tab" role="tab" data-rd-view="grupos" aria-selected="false">Grupos</button>
+          </div>
+        </div>
+        <div class="ai-card__body radios-body" id="radios-body" aria-live="polite"></div>
+      </section>
+
+      <section class="ai-card radios-focus" aria-label="Radio en foco">
+        <p class="radios-focus__txt">En foco: <b id="radios-focus-label">Ninguno</b></p>
+        <div class="radios-actions">
+          <button type="button" class="radios-act is-primary" id="radios-act-ind">Llamada individual</button>
+          <button type="button" class="radios-act" id="radios-act-grp">Llamada de grupo</button>
+          <button type="button" class="radios-act" id="radios-act-msg">Mensaje</button>
+        </div>
+        <p class="radios-hint" id="radios-hint" aria-live="polite"></p>
       </section>
     </div>
   </aside>
@@ -609,6 +919,45 @@
           </div>
           <p class="monitor__fleet-count" id="monitor-count">—</p>
         </header>
+        <div class="monitor__source" role="group" aria-label="Tipo de unidad en monitoreo">
+          <button type="button" class="monitor__source-btn is-active" data-monitor-source="robots" aria-pressed="true">
+            Robots <span class="monitor__source-count" id="monitor-source-robots-count">9</span>
+          </button>
+          <button type="button" class="monitor__source-btn" data-monitor-source="field" aria-pressed="false">
+            Oficiales <span class="monitor__source-count" id="field-source-count">6</span>
+          </button>
+        </div>
+        <div class="field-fleet" id="field-fleet" hidden>
+          <div class="field-fleet__summary" id="field-summary" aria-label="Operadores por estatus"></div>
+          <div class="field-fleet__tools">
+            <div class="field-fleet__views" role="group" aria-label="Cámaras del oficial">
+              <button type="button" class="field__grid-btn is-active" data-field-grid="1" aria-pressed="true" title="1 cámara">1</button>
+              <button type="button" class="field__grid-btn" data-field-grid="2" aria-pressed="false" title="Bodycam y cámara de patrulla">2</button>
+            </div>
+            <div class="monitor__query">
+              <label class="monitor__search">
+                <span class="sr-only">Buscar operador</span>
+                <svg class="monitor__search-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="6.5"/>
+                  <path d="m16 16 4.5 4.5"/>
+                </svg>
+                <input type="search" id="field-search" placeholder="Nombre, OF-ID o patrulla…" autocomplete="off">
+              </label>
+              <div class="monitor__filter">
+                <button type="button" class="monitor__filter-btn" id="field-filter-btn"
+                        aria-haspopup="listbox" aria-expanded="false" aria-controls="field-filter-menu">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 5h16l-6.5 7.5V19l-3 1.5v-8L4 5Z"/>
+                  </svg>
+                  <span class="monitor__filter-label" id="field-filter-label">Todos</span>
+                </button>
+                <div class="monitor__filter-menu" id="field-filter-menu" role="listbox" aria-label="Filtrar por estatus" hidden></div>
+              </div>
+            </div>
+          </div>
+          <p class="field-fleet__count" id="field-count" aria-live="polite"></p>
+          <ul class="field-fleet__list" id="field-list" role="listbox" aria-label="Operadores de campo"></ul>
+        </div>
         <div class="monitor__tools">
           <div class="monitor__view-toggle" role="group" aria-label="Cuadrícula de cámaras">
             <button type="button" class="monitor__view-btn is-active" data-grid="1" aria-pressed="true" title="1 cámara">1</button>
@@ -648,6 +997,111 @@
 
       <!-- Viewport: stream + HUD, o muro de cámaras -->
       <div class="monitor__viewport">
+      <!-- Vista de operador de campo (bodycam / cámara de patrulla) -->
+      <div class="field" id="field-view" data-cams="1" hidden>
+        <div class="field__alert" id="field-alert" hidden role="status" aria-live="assertive"></div>
+        <div class="field__stage" id="field-stage"></div>
+        <div class="field__overlay" id="field-overlay">
+          <div class="monitor-glass monitor__unit" id="field-unit" aria-label="Datos del oficial"></div>
+          <div class="monitor-glass monitor__control" id="field-talkbox">
+            <div class="field__voice" role="group" aria-label="Acciones de voz del oficial">
+              <button type="button" class="field__voice-btn" id="field-voice-call">Llamar</button>
+              <button type="button" class="field__voice-btn" id="field-voice-group">Grupo</button>
+              <button type="button" class="field__voice-btn" id="field-voice-listen" aria-pressed="false" aria-expanded="false">Escucha</button>
+            </div>
+            <form class="field__voice-form" id="field-voice-form" hidden>
+              <label class="field__voice-label">
+                <span class="sr-only">Motivo de la escucha</span>
+                <input type="text" id="field-voice-motive" maxlength="80" autocomplete="off" placeholder="Motivo de la escucha">
+              </label>
+              <button type="submit" class="field__voice-btn is-primary">Iniciar</button>
+              <button type="button" class="field__voice-btn" id="field-voice-cancel">Cancelar</button>
+            </form>
+            <p class="monitor__mode-hint" id="field-voice-hint" aria-live="polite"></p>
+          </div>
+          <button type="button" class="monitor__log-open" id="field-log-open"
+                  aria-controls="field-drawer" aria-expanded="false"
+                  aria-label="Mostrar detalle del oficial">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+            </svg>
+          </button>
+          <aside class="monitor__log field__drawer" id="field-drawer" hidden aria-label="Detalle del oficial">
+            <header class="monitor__log-head">
+              <p class="monitor__hud-label">Detalle</p>
+              <button type="button" class="monitor__log-close" id="field-log-close"
+                      aria-controls="field-drawer" aria-expanded="true"
+                      aria-label="Ocultar detalle del oficial">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 6l12 12M18 6 6 18"/>
+                </svg>
+              </button>
+            </header>
+            <div class="field__drawer-scroll">
+              <div class="field__ficha" id="field-ficha"></div>
+              <section class="field__tx" aria-label="Transmisiones recientes">
+                <h3 class="field__ficha-title">Transmisiones recientes</h3>
+                <ol class="field-hist-list" id="field-radio"></ol>
+              </section>
+            </div>
+          </aside>
+          <div class="monitor-glass monitor__minimap" id="field-minimap" aria-label="Ubicación del oficial">
+            <div class="monitor__map-frame" id="field-map-frame" role="button" tabindex="0"
+                 data-field-minimap="" aria-label="Ver ubicación en el mapa">
+              <img class="monitor__map-img" src="assets/monitor-streetview.jpg"
+                   alt="" width="640" height="360" decoding="async">
+              <svg class="monitor__map-svg" id="field-map-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+            </div>
+          </div>
+          <button type="button" class="field__pip" id="field-pip" aria-label="Cambiar a Patrulla">
+            <video class="field__pip-video" id="field-pip-video" muted loop playsinline></video>
+            <span class="field__pip-idle" id="field-pip-idle" hidden>Sin señal</span>
+            <span class="field__pip-label" id="field-pip-label">Patrulla</span>
+          </button>
+          <button type="button" class="monitor__tl-open" id="field-tl-open"
+                  aria-controls="field-timeline" aria-expanded="false"
+                  aria-label="Mostrar línea de tiempo de grabación">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <path d="M8 5v14M16 5v14M3 12h18"/>
+            </svg>
+          </button>
+          <div class="monitor-glass monitor__timeline" id="field-timeline" hidden
+               aria-label="Línea de tiempo de grabación">
+            <div class="monitor__tl-tools">
+              <button type="button" class="monitor__tl-btn" id="field-tl-play"
+                      aria-label="Reproducir o pausar grabación">
+                <svg class="monitor__tl-icon-play" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg class="monitor__tl-icon-pause" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" hidden>
+                  <path d="M6 5h4v14H6zm8 0h4v14h-4z"/>
+                </svg>
+              </button>
+              <button type="button" class="monitor__tl-btn monitor__tl-livebtn" id="field-tl-golive"
+                      aria-label="Ir a en vivo">En vivo</button>
+              <span class="monitor__tl-mode" id="field-tl-mode">EN VIVO</span>
+              <time class="monitor__tl-clock" id="field-tl-clock">—</time>
+              <button type="button" class="monitor__tl-btn monitor__tl-close" id="field-tl-close"
+                      aria-controls="field-timeline" aria-expanded="false"
+                      aria-label="Ocultar línea de tiempo">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 6l12 12M18 6 6 18"/>
+                </svg>
+              </button>
+            </div>
+            <div class="monitor__tl-track" id="field-tl-track" role="slider"
+                 aria-label="Posición en la grabación" aria-valuemin="0" aria-valuemax="100"
+                 aria-valuenow="100" tabindex="0">
+              <div class="monitor__tl-film" id="field-tl-film" aria-hidden="true"></div>
+              <div class="monitor__tl-alerts" id="field-tl-alerts"></div>
+              <div class="monitor__tl-playhead" id="field-tl-playhead" aria-hidden="true"></div>
+              <div class="monitor__tl-hours" id="field-tl-hours" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="monitor__stage" id="monitor-stage" aria-hidden="true">
         <video class="monitor__video" id="monitor-video" muted loop playsinline></video>
         <div class="monitor__vignette"></div>
@@ -860,7 +1314,7 @@
 <p class="placeholder-note">Maqueta conceptual · Todos los datos, calles y cifras son ilustrativos</p>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="js/data.js"></script>
+<script src="js/data.js?v=fase1"></script>
 <script src="js/ui.js"></script>
 <script src="js/shell.js"></script>
 <script src="js/map.js"></script>
@@ -870,5 +1324,6 @@
 <script src="js/incidents.js"></script>
 <script src="js/demo-alert.js"></script>
 <script src="js/monitor.js"></script>
+<script src="js/field.js?v=fase6b"></script>
 </body>
 </html>

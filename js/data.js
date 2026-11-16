@@ -897,3 +897,385 @@ const MONITOR_FLEET = [
     ]
   }
 ];
+
+/* ============================================================
+   OPERADORES DE CAMPO — TODO PLACEHOLDER ILUSTRATIVO
+   Nombres, iniciales, IDs, rutas, batería, señal, grupos, estados
+   reportados, movimiento, llamadas, mensajes y registros son ficticios.
+   No hay fotos reales: los avatares usan iniciales. No hay teléfonos
+   reales (se muestran enmascarados), ni audio, ni radio, ni ubicación
+   reales. Nada de esto está verificado ni vinculado a un sistema real.
+   Al conectar datos reales, este bloque es el único que cambia.
+   ============================================================ */
+
+/* Estado visible del oficial: la última tecla reportada por radio. Si el radio
+   está apagado no puede reportar, así que el estado es "apagado". */
+const FIELD_STATUS = {
+  disponible:     { label:"Disponible",        tone:"ok" },
+  en_camino:      { label:"En camino",         tone:"info" },
+  en_sitio:       { label:"En sitio",          tone:"info" },
+  finalizado:     { label:"Finalizado",        tone:"muted" },
+  fuera_servicio: { label:"Fuera de servicio", tone:"muted" },
+  apagado:        { label:"Radio apagado",     tone:"warn" }
+};
+
+const FIELD_STATUS_RANK = { en_camino:1, en_sitio:2, disponible:3, apagado:4, finalizado:5, fuera_servicio:6 };
+
+/* Mensajes simulados que llegan desde los radios de los oficiales. */
+const FIELD_MESSAGE_POOL = [
+  "Enterado.",
+  "En ruta.",
+  "Sin novedades en el sector.",
+  "¿Confirmo cambio de punto?",
+  "Llego en unos minutos.",
+  "Tráfico lento en la zona.",
+  "Batería baja, cambio a la unidad de respaldo."
+];
+
+const FIELD_DEVICE_LABEL = {
+  bodycam:  "Bodycam",
+  radio:    "Radio",
+  patrulla: "Cámara de patrulla"
+};
+
+/* Canal de tráfico de radio que usa la simulación. No es lo mismo que el
+   grupo de radio (FIELD_GROUPS), que es la agrupación del panel de radios. */
+const FIELD_CHANNELS = [
+  { id:"ch-1", name:"Patrullas Norte" },
+  { id:"ch-2", name:"Patrullas Sur" },
+  { id:"ch-3", name:"Tránsito" },
+  { id:"ch-4", name:"Emergencias" }
+];
+
+/* Teclas del radio: el oficial reporta su estado con ellas. Solo se
+   muestran; la configuración de teclas vive en el admin del CAD Saimon. */
+const FIELD_RADIO_KEYS = [
+  { id:"disponible",     n:1, label:"Disponible",        tone:"ok"    },
+  { id:"en_camino",      n:2, label:"En camino",         tone:"info"  },
+  { id:"en_sitio",       n:3, label:"En sitio",          tone:"info"  },
+  { id:"finalizado",     n:4, label:"Finalizado",        tone:"muted" },
+  { id:"fuera_servicio", n:5, label:"Fuera de servicio", tone:"muted" }
+];
+
+/* Grupos del radio. Un radio pertenece a un solo grupo (campo group). */
+const FIELD_GROUPS = [
+  { id:"g-norte",  name:"Operativo Norte" },
+  { id:"g-centro", name:"Sector Centro" },
+  { id:"g-vial",   name:"Vialidad" }
+];
+
+/* Estados de la bodycam. Se deducen de los campos online / recording /
+   transmitting de cada dispositivo; no se guardan aparte. */
+const FIELD_BODYCAM_STATES = [
+  { id:"apagada",       label:"Apagada" },
+  { id:"en_espera",     label:"En espera" },
+  { id:"grabando",      label:"Grabando" },
+  { id:"transmitiendo", label:"Transmitiendo" }
+];
+
+/* Funciones opcionales de la bodycam, según el modelo. Cada oficial trae
+   solo las suyas (campo features). */
+const FIELD_BODYCAM_FEATURES = [
+  { id:"voz",              label:"Voz desde cámara" },
+  { id:"boton",            label:"Botón de alerta" },
+  { id:"videollamada",     label:"Videollamada" },
+  { id:"grabacion_evento", label:"Grabación automática por evento" }
+];
+
+/* Estados de una llamada individual o de grupo. */
+const FIELD_CALL_STATES = [
+  { id:"llamando",   label:"Llamando" },
+  { id:"en_curso",   label:"En curso" },
+  { id:"finalizada", label:"Finalizada" }
+];
+
+/* Alertas. La IA las trata igual, pero con su nombre propio. */
+const FIELD_ALERT_KINDS = {
+  emergencia:   { label:"Botón de emergencia" },
+  hombre_caido: { label:"Hombre caído" }
+};
+
+/* Quién origina un registro de la bitácora. */
+const FIELD_ORIGINS = ["Oficial", "Operador", "IA"];
+
+/* Operador que usa la consola. permisoEscucha controla si puede usar la
+   escucha ambiente; sin permiso, la función se bloquea y se explica. */
+const FIELD_OPERATOR_USER = {
+  name:"Op. L. Méndez", initials:"LM", permisoEscucha:true
+};
+
+/* Plantillas de mensaje: se envían con un clic. */
+const FIELD_MESSAGE_TEMPLATES = [
+  "Confirma tu ubicación",
+  "¿Requieres apoyo?",
+  "Dirígete al incidente asignado",
+  "Regresa a tu sector"
+];
+
+/* Motivos de la escucha ambiente. El motivo es obligatorio. */
+const FIELD_ESCUCHA_MOTIVOS = [
+  "Seguridad del oficial",
+  "Verificación de incidente en curso",
+  "Solicitud del supervisor"
+];
+
+/* Teléfonos para el enlace telefónico (interoperabilidad). Solo se muestran
+   enmascarados; no se marca nada real. */
+const FIELD_PHONE_LINKS = [
+  { id:"tel-4821", masked:"+52 33 •••• 4821", label:"Reportante", incidentId:"inc-0172" }
+];
+
+const FIELD_SIM = {
+  tickMs: 2000,                 // misma cadencia que el monitoreo de robots
+  clockBase: "11:20:00",        // hora simulada de arranque
+  stepPerTick: 0.012,           // avance sobre la ruta por tick (fracción)
+  bodycamDrainPerMin: 0.5,      // % de batería por minuto
+  radioDrainPerMin: 0.35,
+  radioChatterChance: 0.3,      // probabilidad por tick de tráfico de radio
+  requestSentSec: 3,            // solicitud enviada -> aceptada
+  requestAcceptSec: 6,          // aceptada -> transmitiendo
+  emergencyFirstSec: 46,        // primera emergencia simulada
+  emergencyEverySec: [90, 150], // rango entre emergencias
+  relatedWindowSec: 60,         // ventana para marcar fuentes coincidentes
+
+  /* Ficha ampliada: radio, llamadas, mensajes y movimiento. */
+  msgMaxChars: 200,             // límite de caracteres por mensaje de radio
+  pregrabSec: 120,              // pregrabación de la bodycam (ilustrativa)
+  callRingSec: 2,               // llamando -> en curso
+  radioKeyChancePerTick: 0.04,  // un oficial reporta una tecla del radio
+  callChancePerTick: 0.02,      // llamada iniciada por la simulación
+  msgChancePerTick: 0.05,       // mensaje entrante simulado
+  radioOffChancePerTick: 0.004, // radio que se apaga durante el servicio
+  speedKmh: { a_pie:[3, 6], vehiculo:[25, 55] },
+  stoppedAlertMin: 4,           // detenido más de esto en un incidente -> señal (demo)
+  radioOffSec: [60, 120],       // pérdida de radio simulada: duración
+  llamadaDurSec: [20, 60],      // duración de llamadas simuladas
+  despachoPaso: 0.05,           // avance por tick de la unidad despachada (fracción de ruta)
+  atencionSec: [25, 40],        // tiempo en sitio antes de "Finalizado"
+  cadenaPasosSec: [0, 1, 2, 4, 6, 8], // segundos entre pasos de la cadena de la IA
+  paradaChancePerTick: 0.01,    // un oficial en movimiento se detiene
+  arrancaChancePerTick: 0.02    // un oficial detenido (no en sitio) vuelve a moverse
+};
+
+/* Campos por oficial (además de los ya existentes):
+   group      → id de FIELD_GROUPS
+   estados    → historial de teclas del radio [{t, key}]; la última es la actual
+   mov        → movimiento: modo (a_pie | vehiculo | detenido), kmh, rumbo (grados o null)
+   features   → ids de FIELD_BODYCAM_FEATURES que tiene su bodycam
+   mensajes   → conversación con el oficial [{de: of | op | ia, t, texto, leido}]
+   llamadas   → historial de llamadas [{tipo: individual | grupo | telefono, t, dur, por, grupo?}]
+*/
+const FIELD_OPERATORS = [
+  {
+    id:"of-ramirez", name:"Of. Ramírez", fullName:"Oficial A. Ramírez", initials:"AR", badge:"OF-1207",
+    corp:"Seguridad Pública", role:"Patrulla preventiva", sector:"Sector 1 Norte", group:"g-norte",
+    since:"10:48", channel:"ch-1", incidentId:"inc-0172",
+    route:[[-103.3585,20.6598],[-103.3560,20.6604],[-103.3540,20.6613],[-103.3529,20.6619]],
+    progress:0.6,
+    bodycam:{ id:"BC-12", battery:71, signal:90, online:true, recording:true, transmitting:false, src:"assets/cam-bodycam.mp4" },
+    radio:  { id:"R-12",  battery:64, signal:88, online:true, transmitting:false },
+    patrol: { id:"PT-14", camId:"PC-14", label:"Patrulla 14", online:true, recording:true, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"10:48", text:"Inicio de turno · Sector 1 Norte" },
+      { t:"10:55", text:"Enlace de radio con canal Patrullas Norte" },
+      { t:"11:04", text:"Atiende colisión en Av. Américas" },
+      { t:"11:09", text:"Bodycam BC-12 en grabación" }
+    ],
+    estados:[{ t:"10:48", key:"disponible" }, { t:"10:58", key:"en_camino" }, { t:"11:04", key:"en_sitio" }],
+    mov:{ modo:"detenido", kmh:0, rumbo:null },
+    features:["voz", "videollamada", "grabacion_evento"],
+    mensajes:[
+      { de:"ia", t:"10:58", texto:"Incidente inc-0172 · Colisión vehicular · Av. Américas. Confirma con tu tecla En camino.", leido:true },
+      { de:"of", t:"10:59", texto:"Enterado, voy en camino.", leido:true },
+      { de:"op", t:"11:12", texto:"¿Requieres grúa?", leido:true },
+      { de:"of", t:"11:14", texto:"Sí, un auto bloquea el carril derecho.", leido:false },
+      { de:"of", t:"11:15", texto:"Hay un lesionado leve, ya pedí ambulancia.", leido:false }
+    ],
+    llamadas:[
+      { tipo:"individual", t:"11:02", dur:"01:12", por:"Op. L. Méndez" },
+      { tipo:"telefono",   t:"11:09", dur:"03:10", por:"Op. L. Méndez" }
+    ]
+  },
+  {
+    id:"of-torres", name:"Of. Torres", fullName:"Oficial M. Torres", initials:"MT", badge:"OF-0944",
+    corp:"Tránsito Municipal", role:"Control de tránsito", sector:"Sector 2 Norte", group:"g-vial",
+    since:"08:00", channel:"ch-3", incidentId:null,
+    route:[[-103.3600,20.6700],[-103.3580,20.6690],[-103.3560,20.6680]],
+    progress:0.2,
+    bodycam:{ id:"BC-18", battery:88, signal:84, online:true, recording:true, transmitting:false, src:"assets/cam-bodycam.mp4" },
+    radio:  { id:"R-18",  battery:79, signal:91, online:true, transmitting:false },
+    patrol: { id:"PT-07", camId:"PC-07", label:"Patrulla 07", online:true, recording:true, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"08:00", text:"Inicio de turno · Sector 2 Norte" },
+      { t:"09:30", text:"Revisión de cruce Vallarta y Chapultepec" },
+      { t:"10:40", text:"Rutina de patrulla sin novedad" }
+    ],
+    estados:[{ t:"08:00", key:"disponible" }],
+    mov:{ modo:"vehiculo", kmh:34, rumbo:210 },
+    features:["voz"],
+    mensajes:[],
+    llamadas:[]
+  },
+  {
+    id:"of-salcedo", name:"Of. Salcedo", fullName:"Oficial L. Salcedo", initials:"LS", badge:"OF-1431",
+    corp:"Protección Civil", role:"Respuesta médica", sector:"Sector 1 Norte", group:"g-norte",
+    since:"09:15", channel:"ch-4", incidentId:"inc-0410",
+    route:[[-103.3498,20.6640],[-103.3490,20.6634],[-103.3480,20.6628]],
+    progress:0.8,
+    bodycam:{ id:"BC-03", battery:58, signal:76, online:true, recording:true, transmitting:true, src:"assets/cam-colision.mp4" },
+    radio:  { id:"R-03",  battery:52, signal:80, online:true, transmitting:false },
+    patrol: { id:"PT-22", camId:"PC-22", label:"Patrulla 22", online:false, recording:false, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"09:15", text:"Inicio de turno · Protección Civil" },
+      { t:"10:31", text:"Asignado a incidente de colisión" },
+      { t:"10:52", text:"Cámara de patrulla PT-22 sin señal" },
+      { t:"11:12", text:"Bodycam BC-03 transmitiendo en vivo" }
+    ],
+    estados:[{ t:"09:15", key:"disponible" }, { t:"10:31", key:"en_camino" }, { t:"10:44", key:"en_sitio" }],
+    mov:{ modo:"detenido", kmh:0, rumbo:null },
+    features:["voz", "boton", "grabacion_evento"],
+    mensajes:[
+      { de:"ia", t:"10:31", texto:"Incidente inc-0410 · Colisión · Confirma con tu tecla En camino.", leido:true }
+    ],
+    llamadas:[]
+  },
+  {
+    id:"of-vega", name:"Of. Vega", fullName:"Oficial R. Vega", initials:"RV", badge:"OF-1062",
+    corp:"Seguridad Pública", role:"Vigilancia de plaza", sector:"Sector 5 Sur", group:"g-centro",
+    since:"07:30", channel:"ch-2", incidentId:null,
+    route:[[-103.3440,20.6548],[-103.3450,20.6556],[-103.3462,20.6566]],
+    progress:0.4,
+    bodycam:{ id:"BC-21", battery:66, signal:82, online:true, recording:true, transmitting:false, src:"assets/cam-bodycam.mp4" },
+    radio:  { id:"R-21",  battery:90, signal:94, online:true, transmitting:false },
+    patrol: { id:"PT-31", camId:"PC-31", label:"Patrulla 31", online:true, recording:false, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"07:30", text:"Inicio de turno · Sector 5 Sur" },
+      { t:"08:45", text:"Vigilancia de plaza principal" },
+      { t:"10:10", text:"Reporte de rutina por radio" }
+    ],
+    estados:[{ t:"07:30", key:"disponible" }],
+    mov:{ modo:"a_pie", kmh:4, rumbo:12 },
+    features:["voz"],
+    mensajes:[],
+    llamadas:[]
+  },
+  {
+    id:"of-montano", name:"Of. Montaño", fullName:"Oficial D. Montaño", initials:"DM", badge:"OF-0817",
+    corp:"Seguridad Pública", role:"Patrulla de apoyo", sector:"Sector 2 Norte", group:"g-norte",
+    since:"08:40", channel:"ch-2", incidentId:null,
+    route:[[-103.3560,20.6575],[-103.3555,20.6580]],
+    progress:0,
+    bodycam:{ id:"BC-09", battery:12, signal:0, online:false, recording:false, transmitting:false, src:"assets/cam-bodycam.mp4" },
+    radio:  { id:"R-09",  battery:5,  signal:0, online:false, transmitting:false },
+    patrol: { id:"PT-09", camId:"PC-09", label:"Patrulla 09", online:false, recording:false, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"08:40", text:"Inicio de turno · Sector 2 Norte" },
+      { t:"10:55", text:"Pérdida de señal de radio y bodycam" }
+    ],
+    estados:[{ t:"08:40", key:"disponible" }],
+    mov:{ modo:"detenido", kmh:0, rumbo:null },
+    features:["voz"],
+    mensajes:[],
+    llamadas:[]
+  },
+  {
+    id:"of-ruiz", name:"Of. Ruiz", fullName:"Oficial J. Ruiz", initials:"JR", badge:"OF-1190",
+    corp:"Tránsito Municipal", role:"Operativo vial", sector:"Sector 5 Sur", group:"g-vial",
+    since:"09:00", channel:"ch-3", incidentId:null,
+    route:[[-103.3510,20.6530],[-103.3525,20.6540],[-103.3538,20.6548]],
+    progress:0.5,
+    bodycam:{ id:"BC-27", battery:22, signal:70, online:true, recording:true, transmitting:false, src:"assets/cam-bodycam.mp4" },
+    radio:  { id:"R-27",  battery:47, signal:86, online:true, transmitting:false },
+    patrol: { id:"PT-27", camId:"PC-27", label:"Patrulla 27", online:true, recording:true, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"09:00", text:"Inicio de turno · Operativo vial" },
+      { t:"10:20", text:"Batería de bodycam BC-27 por debajo de 25%" },
+      { t:"11:02", text:"Operativo vial en Av. Patria" }
+    ],
+    estados:[{ t:"09:00", key:"disponible" }],
+    mov:{ modo:"vehiculo", kmh:28, rumbo:95 },
+    features:["voz", "boton"],
+    mensajes:[],
+    llamadas:[]
+  },
+  {
+    id:"of-ortiz", name:"Of. Ortiz", fullName:"Oficial S. Ortiz", initials:"SO", badge:"OF-1355",
+    corp:"Seguridad Pública", role:"Patrulla de respuesta", sector:"Sector 1 Norte", group:"g-norte",
+    since:"08:30", channel:"ch-1", incidentId:null,
+    route:[[-103.3520,20.6650],[-103.3508,20.6658],[-103.3495,20.6664]],
+    progress:0.3,
+    bodycam:{ id:"BC-15", battery:81, signal:88, online:true, recording:true, transmitting:false, src:"assets/cam-bodycam.mp4" },
+    radio:  { id:"R-15",  battery:73, signal:90, online:true, transmitting:false },
+    patrol: { id:"PT-15", camId:"PC-15", label:"Patrulla 15", online:true, recording:false, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"08:30", text:"Inicio de turno · Sector 1 Norte" },
+      { t:"10:12", text:"Ronda por Av. Patria sin novedad" }
+    ],
+    estados:[{ t:"08:30", key:"disponible" }],
+    mov:{ modo:"vehiculo", kmh:38, rumbo:75 },
+    features:["voz", "videollamada"],
+    mensajes:[
+      { de:"op", t:"10:40", texto:"Confirma tu ubicación", leido:true }
+    ],
+    llamadas:[]
+  },
+  {
+    id:"of-salas", name:"Of. Salas", fullName:"Oficial P. Salas", initials:"PS", badge:"OF-1288",
+    corp:"Seguridad Pública", role:"Vigilancia de plaza", sector:"Sector 3 Centro", group:"g-centro",
+    since:"07:45", channel:"ch-2", incidentId:null,
+    route:[[-103.3428,20.6712],[-103.3436,20.6722],[-103.3446,20.6730]],
+    progress:0.5,
+    bodycam:{ id:"BC-24", battery:74, signal:86, online:true, recording:true, transmitting:false, src:"assets/cam-bodycam.mp4" },
+    radio:  { id:"R-24",  battery:68, signal:89, online:true, transmitting:false },
+    patrol: { id:"PT-24", camId:"PC-24", label:"Patrulla 24", online:true, recording:true, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"07:45", text:"Inicio de turno · Sector 3 Centro" },
+      { t:"09:50", text:"Vigilancia de plaza central" }
+    ],
+    estados:[{ t:"07:45", key:"disponible" }],
+    mov:{ modo:"a_pie", kmh:5, rumbo:30 },
+    features:["voz", "grabacion_evento"],
+    mensajes:[],
+    llamadas:[
+      { tipo:"grupo", grupo:"g-centro", t:"09:40", dur:"00:45", por:"Op. L. Méndez" }
+    ]
+  },
+  {
+    id:"of-nunez", name:"Of. Núñez", fullName:"Oficial E. Núñez", initials:"EN", badge:"OF-1116",
+    corp:"Protección Civil", role:"Respuesta médica", sector:"Sector 1 Norte", group:"g-norte",
+    since:"08:10", channel:"ch-4", incidentId:null,
+    route:[[-103.3556,20.6636],[-103.3547,20.6642],[-103.3538,20.6648]],
+    progress:0.7,
+    bodycam:{ id:"BC-16", battery:64, signal:80, online:true, recording:true, transmitting:false, src:"assets/cam-bodycam.mp4" },
+    radio:  { id:"R-16",  battery:58, signal:82, online:true, transmitting:false },
+    patrol: { id:"PT-16", camId:"PC-16", label:"Patrulla 16", online:true, recording:false, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"08:10", text:"Inicio de turno · Protección Civil" },
+      { t:"10:30", text:"Traslado de paciente sin novedad" }
+    ],
+    estados:[{ t:"08:10", key:"disponible" }],
+    mov:{ modo:"vehiculo", kmh:30, rumbo:140 },
+    features:["voz", "boton", "grabacion_evento"],
+    mensajes:[],
+    llamadas:[]
+  },
+  {
+    id:"of-cruz", name:"Of. Cruz", fullName:"Oficial V. Cruz", initials:"VC", badge:"OF-1173",
+    corp:"Tránsito Municipal", role:"Control de tránsito", sector:"Sector 3 Centro", group:"g-centro",
+    since:"09:20", channel:"ch-3", incidentId:null,
+    route:[[-103.3455,20.6690],[-103.3448,20.6700],[-103.3440,20.6708]],
+    progress:0.45,
+    bodycam:{ id:"BC-11", battery:49, signal:77, online:true, recording:true, transmitting:false, src:"assets/cam-bodycam.mp4" },
+    radio:  { id:"R-11",  battery:84, signal:91, online:true, transmitting:false },
+    patrol: { id:"PT-11", camId:"PC-11", label:"Patrulla 11", online:true, recording:false, src:"assets/cam-patrulla.mp4" },
+    log:[
+      { t:"09:20", text:"Inicio de turno · Sector 3 Centro" },
+      { t:"10:05", text:"Control de cruce Juárez y Colón" }
+    ],
+    estados:[{ t:"09:20", key:"disponible" }],
+    mov:{ modo:"a_pie", kmh:4, rumbo:300 },
+    features:["voz"],
+    mensajes:[],
+    llamadas:[]
+  }
+];

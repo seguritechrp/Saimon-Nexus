@@ -444,7 +444,8 @@ html[data-theme="dark"] .topnav__logo{mix-blend-mode:lighten}
 }
 
 .map-dock .mapctl,
-.map-dock .devcard{pointer-events:auto}
+.map-dock .devcard,
+.map-dock .ofcard{pointer-events:auto}
 
 /* Controles del mapa */
 .mapctl{
@@ -703,27 +704,17 @@ html[data-theme="dark"] .topnav__logo{mix-blend-mode:lighten}
   border-color:var(--accent-blue);
 }
 
-/* Marcadores: fondo opaco para que el icono no pelee con el Bright. */
-#map[data-map-style="day"] .marker{
-  background:var(--nx-surface-map);box-shadow:var(--shadow-md);
-}
-
-/* Incidente: relleno sólido por prioridad (alta / media / baja). */
+/* El pin lleva el color en ::before. El botón sigue transparente
+   para no pintar un rectángulo sobre el mapa claro. */
+#map[data-map-style="day"] .marker,
 #map[data-map-style="day"] .marker--incidente,
-#map[data-map-style="day"] .marker--incidente.marker--prio-high{
-  background:var(--accent-red);color:var(--text-on-accent);
-  box-shadow:0 0 0 2px var(--nx-surface-map),0 0 1.25rem rgba(var(--accent-red-rgb),.55);
-}
-
-#map[data-map-style="day"] .marker--incidente.marker--prio-medium{
-  background:var(--accent-orange);color:var(--text-on-accent);
-  box-shadow:0 0 0 2px var(--nx-surface-map),0 0 1.25rem rgba(var(--accent-orange-rgb),.55);
-}
-
+#map[data-map-style="day"] .marker--incidente.marker--prio-high,
+#map[data-map-style="day"] .marker--incidente.marker--prio-medium,
 #map[data-map-style="day"] .marker--incidente.marker--prio-low{
-  background:var(--accent-green);color:var(--text-on-accent);
-  box-shadow:0 0 0 2px var(--nx-surface-map),0 0 1.25rem rgba(var(--accent-green-rgb),.55);
+  background:transparent;box-shadow:none;color:var(--text-on-accent);
 }
+
+#map[data-map-style="day"] .marker--dron.marker--ops-hangar{color:var(--text-secondary)}
 
 /* ============================================================
    COLUMNA DERECHA — la IA autónoma

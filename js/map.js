@@ -604,6 +604,23 @@ function showUnitRoute(unitId){
   });
 }
 
+/* Ruta ilustrativa desde un punto hasta un destino (incidente). */
+window.nexusShowRouteToPoint = function nexusShowRouteToPoint(from, to, opts){
+  if(!from || !to){
+    clearUnitRoute();
+    return;
+  }
+  const kind = (opts && opts.kind) || "ground";
+  showGeoRoute(mockRouteCoords(from, to, kind), {
+    kind,
+    colorToken: (opts && opts.colorToken) || "--accent-blue",
+    key: (opts && opts.key) || "point"
+  });
+};
+window.nexusClearMapRoute = function nexusClearMapRoute(){
+  clearUnitRoute();
+};
+
 function mockRouteCoords(from, to, kind){
   if(kind === "air") return [from.slice(), to.slice()];
   const midA = [from[0], from[1] + (to[1] - from[1]) * 0.55];
@@ -632,12 +649,7 @@ function clearAssignedUnitFocus(){
   });
 }
 
-function focusAssignedUnitMarker(markerKey, calloutName, targetLL){
-  const btn = document.querySelector(`.marker[data-device="${markerKey}"]`);
-  if(!btn) return null;
-
-  const lng = Number(btn.dataset.lng);
-  const lat = Number(btn.dataset.lat);
+function focusAssignedMarker(btn, calloutName, targetLL, lng, lat){
   if(Number.isNaN(lng) || Number.isNaN(lat)) return null;
 
   const anchor = btn.closest(".marker-anchor");
@@ -663,6 +675,23 @@ function focusAssignedUnitMarker(markerKey, calloutName, targetLL){
   anchor.appendChild(callout);
 
   return { lng, lat, btn };
+}
+
+function focusAssignedUnitMarker(markerKey, calloutName, targetLL){
+  const btn = document.querySelector(`.marker[data-device="${markerKey}"]`);
+  if(!btn) return null;
+  return focusAssignedMarker(btn, calloutName, targetLL, Number(btn.dataset.lng), Number(btn.dataset.lat));
+}
+
+function officerRouteCoords(officer, target){
+  const route = Array.isArray(officer.route) ? officer.route.map(p => p.slice()) : [];
+  if(route.length >= 2){
+    const end = route[route.length - 1];
+    const same = Math.abs(target[0] - end[0]) < 1e-4 && Math.abs(target[1] - end[1]) < 1e-4;
+    return same ? route : route.concat([target.slice()]);
+  }
+  if(officer.lng == null || officer.lat == null) return null;
+  return mockRouteCoords([officer.lng, officer.lat], target, "ground");
 }
 
 /* Al abrir un incidente: marca unidades asignadas + rutas hacia el punto. */
@@ -703,6 +732,23 @@ window.nexusShowIncidentAssignedUnits = function nexusShowIncidentAssignedUnits(
       coords,
       kind: link.kind,
       colorToken: link.colorToken
+    });
+  });
+
+  const officers = typeof window.nexusFieldOfficersForIncident === "function"
+    ? window.nexusFieldOfficersForIncident(inc.id)
+    : [];
+  officers.forEach(officer => {
+    const btn = document.querySelector(`.marker--oficial[data-field-marker="${officer.id}"]`);
+    if(!btn) return;
+    const placed = focusAssignedMarker(btn, officer.name, target, Number(officer.lng), Number(officer.lat));
+    if(!placed) return;
+    const coords = officerRouteCoords(officer, target);
+    if(!coords) return;
+    routeSpecs.push({
+      coords,
+      kind: "ground",
+      colorToken: "--accent-cyan"
     });
   });
 
@@ -997,6 +1043,20 @@ window.nexusFocusIncidentMarker = function nexusFocusIncidentMarker(incidentId){
     geoMarkers.radar.setLngLat([lng, lat]);
   };
 
+  /* El pin enfocado y su callout comparten el ancla con la tarjeta.
+     Sin este despeje, el folio se pinta encima de la cámara. */
+  const liftAboveMarker = () => {
+    const anchor = document.querySelector(".marker-anchor.is-focus:has(.marker--incidente)");
+    if(!anchor) return;
+    const pointY = anchor.getBoundingClientRect().top;
+    const pieces = [...anchor.querySelectorAll(".marker, .marker-callout")];
+    if(!pieces.length) return;
+    const top = Math.min(...pieces.map(el => el.getBoundingClientRect().top));
+    const gap = 12;
+    const lift = Math.max(28, Math.ceil(pointY - top + gap));
+    geoMarkers.popcard.setOffset([0, -lift]);
+  };
+
   const close = () => {
     card.hidden = true;
     radar.hidden = true;
@@ -1071,6 +1131,7 @@ window.nexusFocusIncidentMarker = function nexusFocusIncidentMarker(incidentId){
     if(incidentId || info.incidentId){
       window.nexusFocusIncidentMarker(incidentId || info.incidentId);
     }
+    liftAboveMarker();
 
     map.easeTo({ center:[Number(useLng), Number(useLat)], duration:600, padding: mapPadding() });
   };
@@ -1134,6 +1195,7 @@ document.querySelectorAll(".layer").forEach(btn=>{
     const on = btn.getAttribute("aria-pressed")==="true";
     btn.setAttribute("aria-pressed", String(!on));
     document.querySelectorAll(`.marker--${btn.dataset.layer}`).forEach(m=>{ m.hidden = on; });
+    window.nexusFieldApplyLayers?.();
   });
 });
 

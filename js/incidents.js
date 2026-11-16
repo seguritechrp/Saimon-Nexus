@@ -358,6 +358,11 @@
     syncMap(inc);
   };
 
+  window.nexusRefreshIncidentDetail = () => {
+    const inc = INCIDENTS.find(i => i.id === state.selectedId);
+    if(inc) renderDetail(inc);
+  };
+
   const goBack = () => {
     state.selectedId = null;
     renderList();

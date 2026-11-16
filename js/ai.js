@@ -11,23 +11,26 @@
   const devicesPanel = document.getElementById("devices-panel");
   const routesPanel = document.getElementById("routes-panel");
   const incidentsPanel = document.getElementById("incidents-panel");
+  const radiosPanel = document.getElementById("radios-panel");
   const orb = document.querySelector(".agent-orb");
   const nameEl = orb && orb.querySelector(".agent-orb__name");
   const actions = orb && orb.querySelectorAll(".agent-orb__action[data-mode]");
-  if(!shell || !aiPanel || !devicesPanel || !routesPanel || !incidentsPanel || !orb || !actions.length) return;
+  if(!shell || !aiPanel || !devicesPanel || !routesPanel || !incidentsPanel || !radiosPanel || !orb || !actions.length) return;
 
   const LABELS = {
     vigia: "Saimon VIGIA",
     patrol: "Saimon RUTAS",
     devices: "Saimon DISPOSITIVOS",
-    incidents: "Saimon INCIDENTES"
+    incidents: "Saimon INCIDENTES",
+    radios: "Saimon RADIOS"
   };
 
   const PANEL_BY_MODE = {
     vigia: aiPanel,
     devices: devicesPanel,
     patrol: routesPanel,
-    incidents: incidentsPanel
+    incidents: incidentsPanel,
+    radios: radiosPanel
   };
 
   const setPanelVisible = (panel, open) => {
@@ -48,6 +51,7 @@
     setPanelVisible(devicesPanel, false);
     setPanelVisible(routesPanel, false);
     setPanelVisible(incidentsPanel, false);
+    setPanelVisible(radiosPanel, false);
     setRightOpen(false);
     if(typeof window.nexusFocusDeviceMarker === "function"){
       window.nexusFocusDeviceMarker(null);
@@ -92,8 +96,15 @@
     setPanelVisible(devicesPanel, target === devicesPanel);
     setPanelVisible(routesPanel, target === routesPanel);
     setPanelVisible(incidentsPanel, target === incidentsPanel);
+    setPanelVisible(radiosPanel, target === radiosPanel);
     setRightOpen(Boolean(target));
     activateMode(mode);
+    if(target === radiosPanel && typeof window.nexusRadiosRefresh === "function"){
+      window.nexusRadiosRefresh();
+    }
+    if(target === aiPanel && typeof window.nexusFieldAiRefresh === "function"){
+      window.nexusFieldAiRefresh();
+    }
   };
 
   const isModeOpen = mode => {
@@ -159,6 +170,8 @@
   const etaEl = document.getElementById("devcard-eta");
   const media = document.getElementById("devcard-media");
   const modelEl = document.getElementById("devcard-model");
+  const initialsEl = document.getElementById("devcard-initials");
+  const monitorBtn = document.getElementById("devcard-monitor");
   const closeBtn = card && card.querySelector(".devcard__close");
   const units = document.querySelectorAll(".unit[data-unit]");
   if(!card || !title || !track || !media) return;
@@ -326,6 +339,8 @@
   };
 
   let openKey = null;
+  let monitorTarget = null;
+  let clickTimer = null;
 
   const setPressed = id => {
     units.forEach(u => {
@@ -338,7 +353,11 @@
       ? nexusLiveMediaTag(src, "devcard__photo", fallback)
       : `<img class="devcard__photo" src="${src || fallback}" alt="" width="480" height="270" decoding="async">`;
 
-  const renderMedia = (kind, streamSrc, camLabel) => {
+  const renderMedia = (kind, streamSrc, camLabel, idleText) => {
+    if(kind === "idle"){
+      media.innerHTML = `<p class="devcard__idle">${idleText || "Sin transmisión"}</p>`;
+      return;
+    }
     if(kind === "photo"){
       media.innerHTML = liveTag(streamSrc, "assets/dron-compact.jpg");
       return;
@@ -397,7 +416,7 @@
       badgeEl.className = "devcard__badge" + (profile.badgeTone ? ` devcard__badge--${profile.badgeTone}` : "");
     }
     if(modelEl){
-      if(isSimple || profile.modelImg === null){
+      if(isSimple || profile.modelImg === null || profile.initials){
         modelEl.hidden = true;
       }else{
         modelEl.hidden = false;
@@ -406,6 +425,13 @@
         modelEl.alt = profile.subtitle || profile.cam || "Modelo de unidad";
       }
     }
+    if(initialsEl){
+      const showInitials = !isSimple && !!profile.initials;
+      initialsEl.hidden = !showInitials;
+      initialsEl.textContent = showInitials ? profile.initials : "";
+    }
+    monitorTarget = (!isSimple && profile.monitor) ? profile.monitor : null;
+    if(monitorBtn) monitorBtn.hidden = !monitorTarget;
     if(isSimple || !(profile.track && profile.track.length)){
       track.hidden = true;
       track.innerHTML = "";
@@ -413,7 +439,7 @@
       track.hidden = false;
       track.innerHTML = missionTrack(profile.track);
     }
-    renderMedia(profile.media, profile.stream, profile.cam);
+    renderMedia(profile.media, profile.stream, profile.cam, profile.idleText);
     card.hidden = false;
     openKey = key;
   };
@@ -421,12 +447,17 @@
   const close = () => {
     card.hidden = true;
     openKey = null;
+    monitorTarget = null;
+    if(monitorBtn) monitorBtn.hidden = true;
     setPressed(null);
     if(typeof window.nexusFocusUnitMarker === "function"){
       window.nexusFocusUnitMarker(null);
     }
     if(typeof window.nexusFocusDeviceMarker === "function"){
       window.nexusFocusDeviceMarker(null);
+    }
+    if(typeof window.nexusFieldOnCardClose === "function"){
+      window.nexusFieldOnCardClose();
     }
   };
 
@@ -442,6 +473,12 @@
     if(opts && opts.badge) profile.badge = opts.badge;
     if(opts && opts.dest) profile.dest = opts.dest;
     if(opts && opts.eta) profile.eta = opts.eta;
+    if(typeof UNIT_MARKER !== "undefined" && UNIT_MARKER[id]){
+      const link = UNIT_MARKER[id];
+      const markerKey = `${link.type}-${link.index}`;
+      if(isMobileFleet(markerKey)) profile.monitor = { type:"fleet", key: markerKey };
+    }
+    if(typeof window.nexusFieldOnCardClose === "function") window.nexusFieldOnCardClose();
     if(typeof window.nexusFocusDeviceMarker === "function"){
       window.nexusFocusDeviceMarker(null);
     }
@@ -454,6 +491,7 @@
   };
 
   const openDevice = markerKey => {
+    if(typeof window.nexusFieldOnCardClose === "function") window.nexusFieldOnCardClose();
     if(typeof DEVICES === "undefined") return false;
     const device = DEVICES.find(d => d.markerKey === markerKey);
     if(!device) return false;
@@ -575,6 +613,26 @@
         || (typeof nexusPickGroundVideo === "function" ? nexusPickGroundVideo() : "assets/perro1.mp4");
     }
 
+    const fleet = typeof MONITOR_FLEET !== "undefined"
+      ? MONITOR_FLEET.find(u => u.markerKey === markerKey)
+      : null;
+    const incident = fleet && fleet.incidentId && device.ops !== "hangar" && typeof INCIDENTS !== "undefined"
+      ? INCIDENTS.find(i => i.id === fleet.incidentId)
+      : null;
+    if(incident){
+      dest = `Hacia ${incident.address}`;
+      eta = `${incident.type} · ${incident.folio}`;
+      badge = "Hacia incidente";
+      badgeTone = incident.priority === "high" ? "danger" : "warning";
+      const onSite = fleet.routeProgress != null && fleet.routeProgress >= 0.85;
+      trackSteps = [
+        { label:"Despachado", time:"—", state:"done", icon:"flag" },
+        { label:"En ruta", time: onSite ? "—" : "Ahora", state: onSite ? "done" : "active", icon:"nav" },
+        { label:"En sitio", time: onSite ? "Ahora" : "—", state: onSite ? "active" : "wait", icon:"pin" },
+        { label:"Cierre", time:"—", state:"wait", icon:"check" }
+      ];
+    }
+
     applyProfile({
       title:"Seguimiento de unidad",
       subtitle: device.name,
@@ -588,6 +646,7 @@
       media: mediaKind,
       stream,
       cam,
+      monitor: isMobileFleet(markerKey) ? { type:"fleet", key: markerKey } : null,
       track: trackSteps
     }, "device:" + markerKey);
 
@@ -598,7 +657,23 @@
     if(typeof window.nexusFocusDeviceMarker === "function"){
       window.nexusFocusDeviceMarker(markerKey, device.code);
     }
+    if(incident) drawDeviceIncidentRoute(device, markerKey, incident);
     return true;
+  };
+
+  const drawDeviceIncidentRoute = (device, markerKey, incident) => {
+    if(typeof window.nexusShowRouteToPoint !== "function") return;
+    if(incident.lng == null || incident.lat == null) return;
+    const btn = document.querySelector(`.marker[data-device="${markerKey}"]`);
+    const lng = Number(btn && btn.dataset.lng);
+    const lat = Number(btn && btn.dataset.lat);
+    if(Number.isNaN(lng) || Number.isNaN(lat)) return;
+    const kind = device.type === "dron" ? "air" : "ground";
+    const color = device.type === "dron" ? "--accent-green"
+      : device.type === "humanoide" ? "--accent-blue" : "--accent-purple";
+    window.nexusShowRouteToPoint([lng, lat], [Number(incident.lng), Number(incident.lat)], {
+      kind, colorToken: color, key: "device:" + markerKey
+    });
   };
 
   units.forEach(btn => {
@@ -620,35 +695,31 @@
     return d && (d.type === "perro" || d.type === "humanoide" || d.type === "dron");
   };
 
-  const onMarkerActivate = (btn, event) => {
-    if(!btn || btn.classList.contains("marker--incidente")) return false;
-    if(!btn.dataset.device) return false;
-    if(event) event.stopPropagation();
-
+  /* Clic: ficha en el mapa. Doble clic: módulo de monitoreo (solo flota móvil). */
+  const openMarkerCard = btn => {
     const unitId = btn.dataset.unit;
     const markerKey = btn.dataset.device;
-
-    /* Flota móvil → módulo Monitoreo (teatro de control). */
-    if(isMobileFleet(markerKey) && typeof window.nexusOpenMonitor === "function"){
-      if(card && !card.hidden) close();
-      window.nexusOpenMonitor(markerKey);
-      return true;
-    }
-
     if(unitId){
       if(!card.hidden && openKey === "unit:" + unitId){
         close();
-        return true;
+        return;
       }
       openUnit(unitId);
-      return true;
+      return;
     }
-
     if(!card.hidden && openKey === "device:" + markerKey){
       close();
-      return true;
+      return;
     }
     openDevice(markerKey);
+  };
+
+  const openMarkerMonitor = btn => {
+    const markerKey = btn.dataset.device;
+    if(!isMobileFleet(markerKey) || typeof window.nexusOpenMonitor !== "function") return false;
+    clearTimeout(clickTimer);
+    if(card && !card.hidden) close();
+    window.nexusOpenMonitor(markerKey);
     return true;
   };
 
@@ -656,17 +727,54 @@
   if(mapRoot){
     mapRoot.addEventListener("click", event => {
       const btn = event.target.closest(".marker[data-device]");
-      onMarkerActivate(btn, event);
+      if(!btn || btn.classList.contains("marker--incidente") || !btn.dataset.device) return;
+      event.stopPropagation();
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => openMarkerCard(btn), 230);
     });
-  }else{
-    document.querySelectorAll(".marker[data-device]").forEach(btn => {
-      btn.addEventListener("click", event => onMarkerActivate(btn, event));
+    mapRoot.addEventListener("dblclick", event => {
+      const btn = event.target.closest(".marker[data-device]");
+      if(!btn || btn.classList.contains("marker--incidente")) return;
+      if(openMarkerMonitor(btn)){
+        event.preventDefault();
+        event.stopPropagation();
+      }
     });
   }
 
   if(closeBtn) closeBtn.addEventListener("click", close);
+  if(monitorBtn){
+    monitorBtn.addEventListener("click", () => {
+      const target = monitorTarget;
+      if(!target) return;
+      close();
+      if(target.type === "fleet" && typeof window.nexusOpenMonitor === "function"){
+        window.nexusOpenMonitor(target.key);
+      }else if(target.type === "field" && typeof window.nexusFieldOpenOperator === "function"){
+        window.nexusFieldOpenOperator(target.key);
+      }
+    });
+  }
 
   window.nexusOpenDevcardUnit = openUnit;
   window.nexusOpenDevcardDevice = openDevice;
   window.nexusCloseDevcard = close;
+  /* Perfil ya armado (operadores de campo). Devuelve false si cerró la misma ficha. */
+  window.nexusOpenDevcardProfile = (profile, key) => {
+    if(!profile || !key) return false;
+    if(!card.hidden && openKey === key){
+      close();
+      return false;
+    }
+    if(!String(key).startsWith("field:") && typeof window.nexusFieldOnCardClose === "function"){
+      window.nexusFieldOnCardClose();
+    }
+    applyProfile(profile, key);
+    setPressed(null);
+    if(String(key).startsWith("field:")){
+      if(typeof window.nexusFocusUnitMarker === "function") window.nexusFocusUnitMarker(null);
+      if(typeof window.nexusFocusDeviceMarker === "function") window.nexusFocusDeviceMarker(null);
+    }
+    return true;
+  };
 })();
